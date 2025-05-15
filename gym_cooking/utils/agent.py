@@ -21,6 +21,10 @@ from collections import namedtuple
 
 import random
 
+import torch
+from gym import spaces
+import re
+
 AgentRepr = namedtuple("AgentRepr", "name location holding")
 
 # Colors for agents.
@@ -420,6 +424,7 @@ class HybridAgent:
         """Return best next action for this agent based on current mode."""
         # Get agent representation from simulation
         sim_agent = next((a for a in obs.sim_agents if a.name == self.name), None)
+       
         if not sim_agent:
             return (0, 0)
 
@@ -431,6 +436,9 @@ class HybridAgent:
         self.holding = sim_agent.holding
         self.action = sim_agent.action
 
+        print(previous_holding)
+        print(self.holding)
+
         # Initialize delegator if needed for metrics tracking
         if self.delegator is None:
             self.initialize_mock_delegator()
@@ -438,11 +446,16 @@ class HybridAgent:
         # Find the other agent (assume it's the fetching agent)
         fetching_agent = next((a for a in obs.sim_agents if a.name != self.name), None)
 
+        
+        
+
         # Check if we should switch to RealAgent mode based on multiple conditions
         if self.mode == "SIMPLE":
             # Condition 1: The agent picked up an object
             if previous_holding is None and self.holding is not None:
                 print(f"{self.name} picked up {self.get_holding()}, switching to REAL_AGENT mode")
+                print("hereeeee")
+                exit()
                 self.mode = "REAL_AGENT"
                 # Initialize the RealAgent
                 self.initialize_real_agent(obs)
@@ -642,7 +655,7 @@ class HybridAgent:
                 #print(f"Marked agent {agent.name} at {agent.location} as non-walkable")
 
         # Log walkable/non-walkable grid for debugging
-        print("Walkable grid status for human:")
+        # print("Walkable grid status for human:")
         for y in range(grid_height):
             row = ""
             for x in range(grid_width):
@@ -650,7 +663,7 @@ class HybridAgent:
                     row += "O" if walkable_grid[(x, y)] else "X"
                 else:
                     row += "?"
-            print(row)
+            # print(row)
         return walkable_grid
         
     def shortest_path_length(self, walkable_grid, start, goal):
@@ -728,7 +741,7 @@ class HybridAgent:
             # Filter to only include steps that have this minimum path length
             best_next_steps = [(pos, move_type) for pos, length, move_type in candidate_steps if length == min_path_length]
             
-            print(best_next_steps)
+            # print(best_next_steps)
 
             # If multiple best next steps exist (same shortest path length), use zig-zag preference
             if len(best_next_steps) > 1:
@@ -896,11 +909,11 @@ class FetchingAgent:
                 return False
 
             def set_priors(self, obs, incomplete_subtasks, priors_type):
-                print(f"{self.agent_name} setting priors")
+                # print(f"{self.agent_name} setting priors")
                 pass
 
             def bayes_update(self, obs_tm1, actions_tm1, beta):
-                print(f"set prior {beta}")
+                # print(f"set prior {beta}")
                 pass
 
         self.delegator = MockDelegator(self.name)
@@ -929,7 +942,7 @@ class FetchingAgent:
         # Record original location on first call
         if self.original_location is None:
             self.original_location = self.location
-            print(f"{self.name} recorded original location: {self.original_location}")
+            # print(f"{self.name} recorded original location: {self.original_location}")
 
             # Initialize distances to objects on first call
             self.initialize_distances(obs, other_agent)
@@ -940,13 +953,13 @@ class FetchingAgent:
 
         # If agent was holding something and now isn't, it means delivery has occurred
         if holding_before is not None and self.holding is None:
-            print(f"{self.name} has delivered the object, now returning to original location: {self.original_location}")
+            # print(f"{self.name} has delivered the object, now returning to original location: {self.original_location}")
             self.returning_home = True
             self.state = "RETURN"
 
         # Check if we're done (back at original location after delivery)
         if self.returning_home and self.location == self.original_location:
-            print(f"{self.name} has returned to original location and is now standing by.")
+            # print(f"{self.name} has returned to original location and is now standing by.")
             self.delivery_complete = True
             self.returning_home = False
             self.state = "DONE"
@@ -961,7 +974,7 @@ class FetchingAgent:
         # need to observe the agent or fetch the object because we can assume the other agent already
         # got the object. 
         if other_agent.holding is not None and self.state in ['OBSERVE', 'FETCH']:
-            print(f"Other agent already holding {other_agent.holding.full_name}, no need to fetch")
+            # print(f"Other agent already holding {other_agent.holding.full_name}, no need to fetch")
             # If we're already holding something, drop it
             if self.holding is not None:
                 print(f"{self.name} will drop {self.get_holding()} and return to original location")
@@ -970,7 +983,7 @@ class FetchingAgent:
             if self.state != "RETURN" and self.state != "DONE":
                 self.returning_home = True
                 self.state = "RETURN"
-                print(f"{self.name} switching to RETURN state")
+                # print(f"{self.name} switching to RETURN state")
 
             if self.state == "RETURN":
                 return self.return_to_origin_state(obs)
@@ -997,7 +1010,7 @@ class FetchingAgent:
 
         # Validate the action format
         if not isinstance(action, tuple) or len(action) != 2:
-            print(f"Invalid action format returned: {action}, defaulting to (0, 0)")
+            # print(f"Invalid action format returned: {action}, defaulting to (0, 0)")
             action = (0, 0)
 
         # Ensure action components are integers
@@ -1006,21 +1019,21 @@ class FetchingAgent:
         # Ensure action is one of the valid cardinal movements or staying still
         valid_actions = [(0, 0), (0, 1), (1, 0), (0, -1), (-1, 0)]
         if action not in valid_actions:
-            print(f"Invalid action {action}, defaulting to (0, 0)")
+            # print(f"Invalid action {action}, defaulting to (0, 0)")
             action = (0, 0)
 
         # Store the action for metrics tracking
         self.action = action
 
         # Print current state and action for debugging
-        print(f"{self.name} is in state {self.state}, taking action {self.action}")
+        # print(f"{self.name} is in state {self.state}, taking action {self.action}")
 
         return self.action
     
     def initialize_distances(self, obs, other_agent):
         """Initialize distances to all fetchable objects at the beginning."""
 
-        print(f"Initializing distances from other agent at {other_agent.location}")
+        # print(f"Initializing distances from other agent at {other_agent.location}")
 
         # Use the calculate_object_distances function to initialize distances
         self.previous_distances = self.calculate_object_distances(obs, other_agent.location)
@@ -1058,7 +1071,7 @@ class FetchingAgent:
                 for fetchable_obj in self.fetchable_objects:
                     if fetchable_obj.lower() in obj_name.lower() and obj_list and hasattr(obj_list[0], 'location') and obj_list[0].location:
                         object_locations[fetchable_obj].append(obj_list[0].location)
-                        print(f"Found {fetchable_obj} at: {obj_list[0].location}")
+                        # print(f"Found {fetchable_obj} at: {obj_list[0].location}")
 
             # Log the found locations
             for obj, locs in object_locations.items():
@@ -1111,7 +1124,7 @@ class FetchingAgent:
                             closest_dist = dist
 
                     current_distances[obj] = closest_dist
-                    print(f"Manhattan distance to nearest {obj}: {closest_dist}")
+                    # print(f"Manhattan distance to nearest {obj}: {closest_dist}")
 
             return current_distances
 
@@ -1798,4 +1811,132 @@ class FetchingAgent:
     def get_action_location(self):
         """Return location if agent takes its action---relevant for navigation planner."""
         import numpy as np
+        return tuple(np.asarray(self.location) + np.asarray(self.action))
+    
+class DQNFetchingAgent:
+    """Agent specialized in fetching objects for a "Human" using DQN and belief.
+    
+    This agent identifies what object (sushi, water, egg, or bread) the other agent is trying to get
+    and fetches it for them to optimize team performance. After delivering an object,
+    it returns to its original location.
+    """
+    
+    def __init__(self, name, color, arglist=None):
+        self.name = name
+        self.color = color
+        self.holding = None
+        self.arglist = arglist
+        self.location = None
+        self.action = (0, 0)
+        # Attributes needed for metrics tracking
+        self.subtask = None
+        self.subtask_agent_names = []
+        self.incomplete_subtasks = []
+        self.new_subtask = None
+        self.new_subtask_agent_names = []
+        self.subtask_complete = False
+
+        # Define a no-op is_subtask_complete function for compatibility
+        self.is_subtask_complete = lambda w: False
+        self.action_map = [(0, 0), (0, -1), (0, 1), (-1, 0), (1, 0)]
+        self.action_space = spaces.Discrete(len(self.action_map))
+
+        # Mock delegator object for metrics compatibility
+        class MockDelegator:
+            def __init__(self, agent_name):
+                self.probs = self
+                self.agent_name = agent_name
+
+            def get_list(self):
+                return []  # No probabilities to report
+
+            def select_subtask(self, agent_name):
+                return None, []
+
+            def should_reset_priors(self, obs, incomplete_subtasks):
+                return False
+
+            def set_priors(self, obs, incomplete_subtasks, priors_type):
+                # print(f"{self.agent_name} setting priors")
+                pass
+
+            def bayes_update(self, obs_tm1, actions_tm1, beta):
+                # print(f"set prior {beta}")
+                pass
+
+        self.delegator = MockDelegator(self.name)
+
+    def __str__(self):
+        return color(self.name[-1], self.color)
+        
+    def get_holding(self):
+        """Return the name of the held object for metrics tracking."""
+        if self.holding is None:
+            return 'None'
+        return self.holding.full_name
+    
+    def strip_ansi(self,text):
+        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+        return ansi_escape.sub('', text)
+    
+    def state_to_dqn_input(self, obs) -> torch.Tensor:
+        
+        clean_grid = [[self.strip_ansi(cell) for cell in row] for row in obs]
+        is_empty = False
+        if clean_grid == []:
+            is_empty = True
+
+        symbol_to_onehot = {
+            '-':    [1,0,0,0,0,0],
+            '1':    [0,1,0,0,0,0],
+            '2':    [0,0,1,0,0,0],
+            '*':    [0,0,0,1,0,0],
+            'p-w':  [0,0,0,0,1,0],
+            'p-s':  [0,0,0,0,0,1],
+        }
+
+        onehot_vectors = []
+
+        for row in clean_grid:
+            for cell in row:
+                onehot = symbol_to_onehot.get(cell, [0,0,0,0,0,0])  
+                onehot_vectors.extend(onehot)
+
+        # Convert list to flat FloatTensor
+        input_tensor = torch.FloatTensor(onehot_vectors)
+
+        return input_tensor, is_empty
+
+    
+    def select_action(self, obs,env, epsilon, policy):
+    
+        sim_agent = next((a for a in obs.sim_agents if a.name == self.name), None)
+        # Update internal state from SimAgent
+        self.location = sim_agent.location
+        self.holding = sim_agent.holding
+        self.action = sim_agent.action
+            
+
+        if random.random() < epsilon:
+            action = self.action_space.sample()
+        else:
+            with torch.no_grad():
+                dqn_indput, is_empty = self.state_to_dqn_input(env.rep)
+
+                if not is_empty:
+                    action = policy(dqn_indput).argmax().item()
+                else:
+                    action = self.action_space.sample()
+        return self.action_map[action], action
+    
+    def all_done(self):
+        """Return whether this agent is done with all tasks."""
+        return True
+        
+    def refresh_subtasks(self, world):
+        """Dummy method for compatibility with metrics tracking."""
+        pass
+        
+    def get_action_location(self):
+        """Return location if agent takes its action---relevant for navigation planner."""
         return tuple(np.asarray(self.location) + np.asarray(self.action))

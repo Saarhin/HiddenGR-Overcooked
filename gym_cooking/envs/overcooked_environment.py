@@ -197,9 +197,9 @@ class OvercookedEnvironment(gym.Env):
     def step(self, action_dict):
         # Track internal environment info.
         self.t += 1
-        print("===============================")
-        print("[environment.step] @ TIMESTEP {}".format(self.t))
-        print("===============================")
+        # print("===============================")
+        # print("[environment.step] @ TIMESTEP {}".format(self.t))
+        # print("===============================")
 
         # Get actions.
         for sim_agent in self.sim_agents:
@@ -274,6 +274,7 @@ class OvercookedEnvironment(gym.Env):
         for agent in self.sim_agents:
             x, y = agent.location
             self.rep[y][x] = str(agent)
+        
 
 
     def get_agent_names(self):
@@ -285,7 +286,7 @@ class OvercookedEnvironment(gym.Env):
         # [path for recipe 1, path for recipe 2, ...] where each path is a list of actions
         subtasks = self.sw.get_subtasks(max_path_length=self.arglist.max_num_subtasks)
         all_subtasks = [subtask for path in subtasks for subtask in path]
-        print('Subtasks:', all_subtasks, '\n')
+        # print('Subtasks:', all_subtasks, '\n')
         return all_subtasks
 
     def get_AB_locs_given_objs(self, subtask, subtask_agent_names, start_obj, goal_obj, subtask_action_obj):
@@ -450,13 +451,13 @@ class OvercookedEnvironment(gym.Env):
                         agent_locations=[agent_i.location, agent_j.location])
                 self.collisions.append(collision)
 
-        print('\nexecute array is:', execute)
+        # print('\nexecute array is:', execute)
 
         # Update agents' actions if collision was detected.
         for i, agent in enumerate(self.sim_agents):
             if not execute[i]:
                 agent.action = (0, 0)
-            print("{} has action {}".format(color(agent.name, agent.color), agent.action))
+            # print("{} has action {}".format(color(agent.name, agent.color), agent.action))
             
             
     def is_adjacent(self, pos1, pos2):

@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {"name":"Python Debugger: Current File","type":"debugpy","request":"launch","program":"${file}","console":"integratedTerminal"},
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Debug main.py with args",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/gym_cooking/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/gym_cooking",         // 👈 this is the fix
+            "args": [
+                "--num-agents", "2",
+                "--level", "DesignOne",
+                "--record",
+                "--belief-experiments"
+            ]
+        }
+    ]
+}

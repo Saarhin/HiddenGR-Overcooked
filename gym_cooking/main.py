@@ -22,6 +22,8 @@ from ml.metrics import kl_divergence_norm_softmax, soft_divergence_point, trajec
 from ml.rl import TabularQLearner
 # -----------------------
 
+from belief import Belief
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser("Overcooked 2 argument parser")
@@ -69,6 +71,12 @@ def parse_arguments():
     parser.add_argument("--train-policies", action="store_true", default=False,
                         help="Force training new policies even if pre-trained ones exist")
     # -----------------------
+
+    # -----------------------
+    # SARAH ADDED
+    # We want the fetcher to have a belief of what the goal is
+    parser.add_argument("--belief-experiments", action="store_true", default=False, help="Run belief agent")
+
 
     return parser.parse_args()
 
@@ -142,6 +150,73 @@ def initialize_agents(arglist):
 
     return real_agents
 
+def initialize_agents_bl(arglist):
+    real_agents = []
+
+    with open('utils/levels/{}.txt'.format(arglist.level), 'r') as f:
+        phase = 1
+        recipes = []
+        for line in f:
+            line = line.strip('\n')
+            if line == '':
+                phase += 1
+
+            # phase 2: read in recipe list
+            elif phase == 2:
+                recipes.append(globals()[line]())
+
+            # phase 3: read in agent locations (up to num_agents)
+            elif phase == 3:
+                if len(real_agents) < arglist.num_agents:
+                    loc = line.split(' ')
+
+                    # ----------------------------------------
+                    # ----------------------------------------
+                    # KIRIN Added
+#                     if len(real_agents)+1 == 1:
+#                         print(f'Initializing agent {len(real_agents)+1} with no recipes at location ({loc[0]}, {loc[1]})')
+#                         real_agent = RealAgent(
+#                                 arglist=arglist,
+#                                 name='agent-'+str(len(real_agents)+1),
+#                                 id_color=COLORS[len(real_agents)],
+#                                 recipes=[])
+                    
+                    # MAKE AGENT 1 A FETCHINGAGENT
+                    if len(real_agents)+1 == 1:
+                        # print(f'Initializing FetchingAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
+                        # real_agent = FetchingAgent(
+                        #         arglist=arglist,
+                        #         name='agent-'+str(len(real_agents)+1),
+                        #         color=COLORS[len(real_agents)])
+                        print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
+                        real_agent = HybridAgent(
+                            arglist=arglist,
+                            name='agent-'+str(len(real_agents)+1),
+                            id_color=COLORS[len(real_agents)],
+                            recipes=recipes)
+                        
+                    else:
+#                         print(f'Initializing agent {len(real_agents)+1} regularly at location ({loc[0]}, {loc[1]})')
+#                         real_agent = RealAgent(
+#                                 arglist=arglist,
+#                                 name='agent-'+str(len(real_agents)+1),
+#                                 id_color=COLORS[len(real_agents)],
+#                                 recipes=recipes)
+
+                        # MAKE AGENT 2 A "HUMAN"
+                        print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
+                        real_agent = HybridAgent(
+                            arglist=arglist,
+                            name='agent-'+str(len(real_agents)+1),
+                            id_color=COLORS[len(real_agents)],
+                            recipes=recipes)
+                    # ----------------------------------------
+    
+                    real_agents.append(real_agent)
+
+    return real_agents
+
+
 def main_loop(arglist):
     """The main loop for running experiments."""
     print("Initializing environment and agents.")
@@ -178,6 +253,46 @@ def main_loop(arglist):
     bag.set_termination(termination_info=env.termination_info,
             successful=env.successful)
 
+
+def main_bl_loop(arglist):
+    
+    b = Belief(arglist)
+    # print("Initializing environment and agents.")
+    # env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=arglist)
+    # obs = env.reset()
+    # # game = GameVisualize(env)
+    # real_agents = initialize_agents_bl(arglist=arglist)
+
+    # # Info bag for saving pkl files
+    # bag = Bag(arglist=arglist, filename=env.filename)
+    # bag.set_recipe(recipe_subtasks=env.all_subtasks)
+    
+
+    # while not env.done():
+    #     action_dict = {}
+
+    #     for agent in real_agents:
+    #         action = agent.select_action(obs=obs)
+    #         action_dict[agent.name] = action
+
+    #     obs, reward, done, info = env.step(action_dict=action_dict)
+       
+        
+
+    #     # Agents
+    #     for agent in real_agents:
+    #         # Only RealAgent needs to refresh subtasks
+    #         if not isinstance(agent, FetchingAgent):
+    #             agent.refresh_subtasks(world=env.world)
+
+    #     # Saving info
+    #     bag.add_status(cur_time=info['t'], real_agents=real_agents)
+
+
+    # # Saving final information before saving pkl file
+    # bag.set_collisions(collisions=env.collisions)
+    # bag.set_termination(termination_info=env.termination_info,
+    #         successful=env.successful)
 
 # -----------------------
 # -----------------------
@@ -236,6 +351,11 @@ if __name__ == '__main__':
         print("Running Goal Recognition experiments")
         main_gr_experiments(arglist)
     # -----------------------
+
+    elif arglist.belief_experiments:
+        print("Running goal recognition using belief")
+        main_bl_loop(arglist=arglist)
+
         
     elif arglist.play:
         print("Running interactive play mode")

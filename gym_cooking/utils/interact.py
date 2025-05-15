@@ -31,7 +31,7 @@ def interact(agent, world, sim_agents):
             obj = agent.holding
             agent.release()
             target_agent.acquire(obj)
-            print(f'\nPassed {obj.full_name} from {agent.name} to {target_agent.name}!')
+            # print(f'\nPassed {obj.full_name} from {agent.name} to {target_agent.name}!')
     # -----------------------
     
     # if floor in front --> move to that square
@@ -46,7 +46,7 @@ def interact(agent, world, sim_agents):
             if obj.is_deliverable():
                 gs.acquire(obj)
                 agent.release()
-                print('\nDelivered {}!'.format(obj.full_name))
+                # print('\nDelivered {}!'.format(obj.full_name))
 
         # if occupied gridsquare in front --> try merging
         elif world.is_occupied(gs.location):

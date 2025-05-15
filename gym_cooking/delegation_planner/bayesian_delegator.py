@@ -291,6 +291,7 @@ class BayesianDelegator(Delegator):
         valid_nav_actions = self.planner.get_actions(state_repr=obs_tm1.get_repr())
 
         # Check if action is valid, with special handling for handoffs
+        
         if action not in valid_nav_actions:
             # Check if this is a handoff action (one agent is adjacent to another)
             agent_locations = [a.location for a in obs_tm1.sim_agents 
@@ -317,8 +318,13 @@ class BayesianDelegator(Delegator):
                 return 0.9
             else:
                 # Still raise error for truly invalid actions
-                assert action in valid_nav_actions, "valid_nav_actions: {}\nlocs: {}\naction: {}".format(
-                    valid_nav_actions, list(filter(lambda a: a.name in self.all_agent_names, obs_tm1.sim_agents)), action)
+                
+                # assert action in valid_nav_actions, "valid_nav_actions: {}\nlocs: {}\naction: {}".format(
+                #     valid_nav_actions, list(filter(lambda a: a.name in self.all_agent_names, obs_tm1.sim_agents)), action)
+                # when training an agent, this code causes the program to break even when exploring. Test to see if it works if I return a very low probability
+
+                return 1e-3
+
 
         # If subtask allocation is joint, then find joint actions that match what the other
         # agent's action_tm1.
