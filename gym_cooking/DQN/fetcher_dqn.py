@@ -258,7 +258,7 @@ class FetcherDQNTrainer:
         self.optimizer.step()
 
     def test(self, episodes):
-        state = self.env.reset()
+        
 
         self.realAgents, self.x, self.y=self.initialize_agents()
        
@@ -266,14 +266,16 @@ class FetcherDQNTrainer:
         policy_DQN.load_state_dict(torch.load('fetcher_dqn.pt'))
         policy_DQN.eval()
 
-        bag = Bag(arglist=self.arglist, filename="test")
-        bag.set_recipe(recipe_subtasks=self.env.all_subtasks)
 
         # target = "Water" if random.random()<0.5 else "Sushi"
-        target = "Sushi"
+        target = "Water"
         for agent in self.realAgents:
                 if agent.name == 'agent-2':
                     agent.target_item = target
+
+        state = self.env.reset(target)
+        bag = Bag(arglist=self.arglist, filename="test")
+        bag.set_recipe(recipe_subtasks=self.env.all_subtasks)
             
         terminated = False
         truncated = False

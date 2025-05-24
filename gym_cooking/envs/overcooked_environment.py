@@ -148,7 +148,7 @@ class OvercookedEnvironment(gym.Env):
         self.world.perimeter = 2*(self.world.width + self.world.height)
 
 
-    def reset(self):
+    def reset(self, target):
         self.world = World(arglist=self.arglist)
         self.recipes = []
         self.sim_agents = []
@@ -167,7 +167,7 @@ class OvercookedEnvironment(gym.Env):
         self.load_level(
                 level=self.arglist.level,
                 num_agents=self.arglist.num_agents)
-        self.all_subtasks = self.run_recipes()
+        self.all_subtasks = self.run_recipes(target)
         self.world.make_loc_to_gridsquare()
         self.world.make_reachability_graph()
         self.cache_distances()
@@ -284,11 +284,11 @@ class OvercookedEnvironment(gym.Env):
     def get_agent_names(self):
         return [agent.name for agent in self.sim_agents]
 
-    def run_recipes(self):
+    def run_recipes(self, target):
         """Returns different permutations of completing recipes."""
         self.sw = STRIPSWorld(world=self.world, recipes=self.recipes)
         # [path for recipe 1, path for recipe 2, ...] where each path is a list of actions
-        subtasks = self.sw.get_subtasks(max_path_length=self.arglist.max_num_subtasks)
+        subtasks = self.sw.get_subtasks(max_path_length=self.arglist.max_num_subtasks, target=target)
         all_subtasks = [subtask for path in subtasks for subtask in path]
         print('Subtasks:', all_subtasks, '\n')
         return all_subtasks

@@ -34,11 +34,12 @@ COLORS = ['blue', 'magenta', 'yellow', 'green']
 class RealAgent:
     """Real Agent object that performs task inference and plans."""
 
-    def __init__(self, arglist, name, id_color, recipes):
+    def __init__(self, arglist, name, id_color, recipes, target):
         self.arglist = arglist
         self.name = name
         self.color = id_color
         self.recipes = recipes
+        self.target_item = target
         print(self.recipes)
 
         # Bayesian Delegation.
@@ -107,7 +108,7 @@ class RealAgent:
         """Return different subtask permutations for recipes."""
         self.sw = STRIPSWorld(world, self.recipes)
         # [path for recipe 1, path for recipe 2, ...] where each path is a list of actions.
-        subtasks = self.sw.get_subtasks(max_path_length=self.arglist.max_num_subtasks)
+        subtasks = self.sw.get_subtasks(max_path_length=self.arglist.max_num_subtasks, target=self.target_item)
         all_subtasks = [subtask for path in subtasks for subtask in path]
 
         # Uncomment below to view graph for recipe path i
@@ -456,7 +457,7 @@ class HybridAgent:
                 print(f"{self.name} picked up {self.get_holding()}, switching to REAL_AGENT mode")
                 self.mode = "REAL_AGENT"
                 # Initialize the RealAgent
-                self.initialize_real_agent(obs)
+                self.initialize_real_agent(obs, target = self.target_item)
 
             # Condition 2: The other agent moved (original condition)
             elif fetching_agent is not None:
@@ -470,7 +471,7 @@ class HybridAgent:
                     print(f"{self.name} switching to REAL_AGENT mode")
                     self.mode = "REAL_AGENT"
                     # Initialize the RealAgent
-                    self.initialize_real_agent(obs)
+                    self.initialize_real_agent(obs, target = self.target_item)
 
         # Choose action based on current mode
         if self.mode == "SIMPLE":
@@ -484,7 +485,7 @@ class HybridAgent:
                 print("Warning: real_agent not initialized properly")
                 return (0, 0)
     
-    def initialize_real_agent(self, obs):
+    def initialize_real_agent(self, obs, target):
         """Initialize a full RealAgent instance with proper setup."""
         try:
             # Create a RealAgent with the same parameters
@@ -492,7 +493,8 @@ class HybridAgent:
                 arglist=self.arglist,
                 name=self.name,
                 id_color=self.color,
-                recipes=self.recipes
+                recipes=self.recipes,
+                target=target
             )
 
             # Copy current state to the RealAgent

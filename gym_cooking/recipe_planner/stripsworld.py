@@ -58,23 +58,24 @@ class STRIPSWorld:
         return graph, goal_state
 
 
-    def get_subtasks(self, max_path_length=10, draw_graph=False):
+    def get_subtasks(self, max_path_length=10, draw_graph=False, target="Water"):
         action_paths = []
 
         for recipe in self.recipes:
-            graph, goal_state = self.generate_graph(recipe, max_path_length)
+            if target in str(recipe):
+                graph, goal_state = self.generate_graph(recipe, max_path_length)
 
-            if draw_graph:   # not recommended for path length > 4
-                nx.draw(graph, with_labels=True)
-                plt.show()
-            
-            all_state_paths = nx.all_shortest_paths(graph, self.initial, goal_state)
-            union_action_path = set()
-            for state_path in all_state_paths:
-                action_path = [graph[state_path[i]][state_path[i+1]]['obj'] for i in range(len(state_path)-1)]
-                union_action_path = union_action_path | set(action_path)
-            # print('all tasks for recipe {}: {}\n'.format(recipe, ', '.join([str(a) for a in union_action_path])))
-            action_paths.append(union_action_path)
+                if draw_graph:   # not recommended for path length > 4
+                    nx.draw(graph, with_labels=True)
+                    plt.show()
+                
+                all_state_paths = nx.all_shortest_paths(graph, self.initial, goal_state)
+                union_action_path = set()
+                for state_path in all_state_paths:
+                    action_path = [graph[state_path[i]][state_path[i+1]]['obj'] for i in range(len(state_path)-1)]
+                    union_action_path = union_action_path | set(action_path)
+                print('all tasks for recipe {}: {}\n'.format(recipe, ', '.join([str(a) for a in union_action_path])))
+                action_paths.append(union_action_path)
 
         return action_paths
         
