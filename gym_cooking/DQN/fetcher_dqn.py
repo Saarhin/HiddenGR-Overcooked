@@ -126,7 +126,7 @@ class FetcherDQNTrainer:
         step_count = 0
 
         for i in tqdm(range(episodes)):
-            state = self.env.reset()
+            
             terminated = False
             truncated = False
             sum_reward = 0
@@ -135,6 +135,7 @@ class FetcherDQNTrainer:
             for agent in self.realAgents:
                     if agent.name == 'agent-2':
                         agent.target_item = target
+            state = self.env.reset(target)
 
 
             while(not terminated and not truncated):
@@ -147,7 +148,7 @@ class FetcherDQNTrainer:
                         action = agent.select_action(obs=state)
                     action_dict[agent.name] = action
 
-                new_state, reward, terminated, _ = self.env.step(action_dict)
+                new_state, reward, terminated, _ = self.env.step(action_dict, target)
 
                 sum_reward += reward
 
