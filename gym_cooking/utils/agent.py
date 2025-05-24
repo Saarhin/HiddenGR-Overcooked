@@ -454,8 +454,6 @@ class HybridAgent:
             # Condition 1: The agent picked up an object
             if previous_holding is None and self.holding is not None:
                 print(f"{self.name} picked up {self.get_holding()}, switching to REAL_AGENT mode")
-                print("hereeeee")
-                exit()
                 self.mode = "REAL_AGENT"
                 # Initialize the RealAgent
                 self.initialize_real_agent(obs)
@@ -1924,6 +1922,7 @@ class DQNFetchingAgent:
                 dqn_indput, is_empty = self.state_to_dqn_input(env.rep)
 
                 if not is_empty:
+                    print(policy(dqn_indput))
                     action = policy(dqn_indput).argmax().item()
                 else:
                     action = self.action_space.sample()

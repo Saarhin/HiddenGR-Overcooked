@@ -129,27 +129,39 @@ class FetcherDQNTrainer:
             state = self.env.reset()
             terminated = False
             truncated = False
+            sum_reward = 0
+
+            target = "Water" if random.random()<0.5 else "Sushi"
+            for agent in self.realAgents:
+                    if agent.name == 'agent-2':
+                        agent.target_item = target
+
 
             while(not terminated and not truncated):
                 action_dict = {}
 
                 for agent in self.realAgents:
                     if agent.name == 'agent-1':
-                        action, action_save = agent.select_action(obs=self.env.rep, epsilon=self.epsilon, policy=self.policy_DQN)
+                        action, action_save = agent.select_action(obs=state,env=self.env, epsilon=self.epsilon, policy=self.policy_DQN)
                     else:
                         action = agent.select_action(obs=state)
                     action_dict[agent.name] = action
 
                 new_state, reward, terminated, _ = self.env.step(action_dict)
 
+                sum_reward += reward
+
                 self.memory.append((state, action_save, new_state, reward, terminated))
+                for agent in self.realAgents:
+                    # Only RealAgent needs to refresh subtasks
+                    if not isinstance(agent, DQNFetchingAgent):
+                        agent.refresh_subtasks(world=self.env.world)
 
                 state = new_state
 
                 step_count += 1
 
-            if reward == 1:
-                reward_per_episode[i] = 1
+            reward_per_episode[i] = sum_reward
 
             if len(self.memory)>self.batch_size and np.sum(reward_per_episode)>0:
                 mini_batch = self.memory.sample(self.batch_size)
@@ -169,12 +181,10 @@ class FetcherDQNTrainer:
 
         plt.figure(1)
 
-        sum_rewards = np.zeros(episodes)
-        for x in range(episodes):
-            sum_rewards[x] = np.sum(reward_per_episode[max(0, x-100):(x+1)])
+        
 
         plt.subplot(121)
-        plt.plot(sum_rewards)
+        plt.plot(reward_per_episode)
 
         plt.subplot(122)
         plt.plot(self.epsilon_history)
@@ -259,7 +269,17 @@ class FetcherDQNTrainer:
         bag = Bag(arglist=self.arglist, filename="test")
         bag.set_recipe(recipe_subtasks=self.env.all_subtasks)
 
-        while not self.env.done():
+        # target = "Water" if random.random()<0.5 else "Sushi"
+        target = "Sushi"
+        for agent in self.realAgents:
+                if agent.name == 'agent-2':
+                    agent.target_item = target
+            
+        terminated = False
+        truncated = False
+
+
+        while(not terminated and not truncated):
             action_dict = {}
 
             for agent in self.realAgents:
@@ -270,7 +290,7 @@ class FetcherDQNTrainer:
                     action = agent.select_action(obs=state)
                 action_dict[agent.name] = action
 
-            state, reward, done, info = self.env.step(action_dict)
+            state, reward, terminated, info = self.env.step(action_dict, target)
            
 
             for agent in self.realAgents:

@@ -21,7 +21,7 @@
             "cwd": "${workspaceFolder}/gym_cooking",         // 👈 this is the fix
             "args": [
                 "--num-agents", "2",
-                "--level", "DesignOne",
+                "--level", "SarahDesignOne",
                 "--record",
                 "--belief-experiments"
             ]

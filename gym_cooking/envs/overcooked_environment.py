@@ -194,7 +194,7 @@ class OvercookedEnvironment(gym.Env):
     def close(self):
         return
 
-    def step(self, action_dict):
+    def step(self, action_dict, target):
         # Track internal environment info.
         self.t += 1
         # print("===============================")
@@ -223,7 +223,7 @@ class OvercookedEnvironment(gym.Env):
         # Get an image observation
         image_obs = self.game.get_image_obs()
 
-        done = self.done()
+        done = self.done(target)
         reward = self.reward()
         info = {"t": self.t, "obs": new_obs,
                 "image_obs": image_obs,
@@ -231,7 +231,7 @@ class OvercookedEnvironment(gym.Env):
         return new_obs, reward, done, info
 
 
-    def done(self):
+    def done(self, target = "Water"):
         # Done if the episode maxes out
         if self.t >= self.arglist.max_num_timesteps and self.arglist.max_num_timesteps:
             self.termination_info = "Terminating because passed {} timesteps".format(
@@ -243,23 +243,27 @@ class OvercookedEnvironment(gym.Env):
 
         # Done if subtask is completed.
         for subtask in self.all_subtasks:
-            # Double check all goal_objs are at Delivery.
-            if isinstance(subtask, recipe.Deliver):
-                _, goal_obj = nav_utils.get_subtask_obj(subtask)
+            if target in str(subtask):
+                # Double check all goal_objs are at Delivery.
+                if isinstance(subtask, recipe.Deliver):
+                    print("vcvcvcvcvcvcvcvcvcvcvcvcvcvcvcvcv")
+                    print(subtask)
+                    _, goal_obj = nav_utils.get_subtask_obj(subtask)
+                    print(goal_obj)
 
-                delivery_loc = list(filter(lambda o: o.name=='Delivery', self.world.get_object_list()))[0].location
-                goal_obj_locs = self.world.get_all_object_locs(obj=goal_obj)
-                if not any([gol == delivery_loc for gol in goal_obj_locs]):
-                    self.termination_info = ""
-                    self.successful = False
-                    return False
+                    delivery_loc = list(filter(lambda o: o.name=='Delivery', self.world.get_object_list()))[0].location
+                    goal_obj_locs = self.world.get_all_object_locs(obj=goal_obj)
+                    if not any([gol == delivery_loc for gol in goal_obj_locs]):
+                        self.termination_info = ""
+                        self.successful = False
+                        return False
 
         self.termination_info = "Terminating because all deliveries were completed"
         self.successful = True
         return True
 
     def reward(self):
-        return 1 if self.successful else 0
+        return 1 if self.successful else -1
 
     def print_agents(self):
         for sim_agent in self.sim_agents:
@@ -286,7 +290,7 @@ class OvercookedEnvironment(gym.Env):
         # [path for recipe 1, path for recipe 2, ...] where each path is a list of actions
         subtasks = self.sw.get_subtasks(max_path_length=self.arglist.max_num_subtasks)
         all_subtasks = [subtask for path in subtasks for subtask in path]
-        # print('Subtasks:', all_subtasks, '\n')
+        print('Subtasks:', all_subtasks, '\n')
         return all_subtasks
 
     def get_AB_locs_given_objs(self, subtask, subtask_agent_names, start_obj, goal_obj, subtask_action_obj):

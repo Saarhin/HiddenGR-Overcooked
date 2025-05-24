@@ -385,6 +385,7 @@ class TabularQLearner(RLAgent):
                           for obj_name, obj in env_state.world.objects.items()),
                     target_agent.get_holding()
                 )
+               
                 return agent_state
         except Exception as e:
             print(f"Error creating agent-specific state: {e}")

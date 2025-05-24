@@ -15,7 +15,7 @@ import os
 #image_dir = 'misc/game/record/DesignFour_agents2_seed1'
 #image_dir = 'misc/game/record/DesignFour_agents2_seed1_model1-bd_model2-bd'
 
-image_dir = 'misc/game/record/DesignOne_agents2_seed1'
+image_dir = 'misc/game/record/SarahDesignOne_agents2_seed1'
 
 # Get a list of all the image files in the directory
 image_files = [f for f in os.listdir(image_dir) if f.endswith('.png')]
