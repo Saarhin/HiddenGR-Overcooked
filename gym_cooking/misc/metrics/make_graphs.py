@@ -102,7 +102,7 @@ def run_main():
     else:
         return
     df = import_data(key, path_pickles, arglist.num_agents)
-    print('done loading pickle data')
+    # print('done loading pickle data')
     plot_data(key, path_save, df, arglist.num_agents, legend=arglist.legend)
 
 
@@ -123,13 +123,13 @@ def compute_stats(path_pickles, num_agents):
                     num_collisions.append(get_collisions(data, recipe))
                 frac_completed.append(get_frac_completed(data, recipe))
             else:
-                print('no file:', fname)
+                # print('no file:', fname)
                 continue
 
-        print('{}   time steps: {:.3f} +/- {:.3f}'.format(model_key[model], np.mean(np.array(num_timesteps)), np.std(np.array(num_timesteps))/np.sqrt(len(num_timesteps))))
-        print('     frac_completed: {:.3f} +/- {:.3f}'.format(np.mean(np.array(frac_completed)), np.std(np.array(num_collisions))/np.sqrt(len(frac_completed))))
-        print('     collisions: {:.3f} +/- {:.3f}'.format(np.mean(np.array(num_collisions)), np.std(np.array(num_collisions))/np.sqrt(len(num_collisions))))
-        print('     shuffles: {:.3f} +/- {:.3f}'.format(np.mean(np.array(num_shuffles)), np.std(np.array(num_collisions))/np.sqrt(len(num_shuffles))))
+        # print('{}   time steps: {:.3f} +/- {:.3f}'.format(model_key[model], np.mean(np.array(num_timesteps)), np.std(np.array(num_timesteps))/np.sqrt(len(num_timesteps))))
+        # print('     frac_completed: {:.3f} +/- {:.3f}'.format(np.mean(np.array(frac_completed)), np.std(np.array(num_collisions))/np.sqrt(len(frac_completed))))
+        # print('     collisions: {:.3f} +/- {:.3f}'.format(np.mean(np.array(num_collisions)), np.std(np.array(num_collisions))/np.sqrt(len(num_collisions))))
+        # print('     shuffles: {:.3f} +/- {:.3f}'.format(np.mean(np.array(num_shuffles)), np.std(np.array(num_collisions))/np.sqrt(len(num_shuffles))))
 
 
 def import_data(key, path_pickles, num_agents):
@@ -152,13 +152,13 @@ def import_data(key, path_pickles, num_agents):
             except:
                 print("trouble loading: {}".format(fname))
         else:
-            print('no file:', fname)
+            # print('no file:', fname)
             continue
 
         # TIME STEPS
         if key == 'time_steps':
             time_steps = get_time_steps(data, recipe)
-            print("{}: {}".format(fname, time_steps))
+            # print("{}: {}".format(fname, time_steps))
             df.append(dict(time_steps = time_steps, **info))
 
         # COMPLETION
@@ -225,7 +225,7 @@ def get_shuffles(data, recipe):
     return shuffles
 
 def plot_data(key, path_save, df, num_agents, legend=False):
-    print('generating {} graphs'.format(key))
+    # print('generating {} graphs'.format(key))
     hue_order = [model_key[l] for l in models]
     color_palette = sns.color_palette()
     sns.set_style('ticks')
@@ -235,7 +235,7 @@ def plot_data(key, path_save, df, num_agents, legend=False):
         for j, map_ in enumerate(maps):
             data = df.loc[(df['map']==map_) & (df['recipe']==recipe), :]
             if len(data) == 0:
-                print('empty data on ', (recipe, map_))
+                # print('empty data on ', (recipe, map_))
                 continue
 
             plt.figure(figsize=(3,3))
@@ -276,7 +276,7 @@ def plot_data(key, path_save, df, num_agents, legend=False):
             plt.savefig(os.path.join(path_save, "{}_{}_{}.png".format(key, recipe, map_)))
             plt.close()
 
-            print('   generated graph for {}, {}'.format(recipe, map_))
+            # print('   generated graph for {}, {}'.format(recipe, map_))
 
     # Make Legend
     if arglist.legend:

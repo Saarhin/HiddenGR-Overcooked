@@ -82,7 +82,7 @@ for recipe, model1, model2, map_, seed in itertools.product(recipes, models, mod
         except:
             continue
     else:
-        print('no file:', fname)
+        # print('no file:', fname)
         continue
     info = {
         'run_id': run_id,
@@ -156,16 +156,16 @@ for recipe, map_ in itertools.product(recipes, maps):
             data = df.loc[(((df['model1']==model1) & (df['model2']==model2)) |
                             ((df['model1']==model2) & (df['model2']==model1))), :]
         if len(data) == 0:
-            print('empty data on ', model1, model2)
+            # print('empty data on ', model1, model2)
             continue
 
         heat_map[x,y] = round(data['time_steps'].mean(), 2)
         se_map[x,y] = round(data['time_steps'].std(), 2)/np.sqrt(len(data))
-        print("{}, {}: {} +/- {}, {} runs".format(model1, model2,
-                                     round(data['time_steps'].mean(), 2),
-                                     round(data['time_steps'].std()/np.sqrt(len(data)), 2),
-                                     len(data),
-                                    ))
+        # print("{}, {}: {} +/- {}, {} runs".format(model1, model2,
+        #                              round(data['time_steps'].mean(), 2),
+        #                              round(data['time_steps'].std()/np.sqrt(len(data)), 2),
+        #                              len(data),
+        #                             ))
 
     cmap = sns.cubehelix_palette(50, hue=0.05, rot=0, light=0.9, dark=0, as_cmap=True)
     labels = (np.asarray(["{0:.1f}\n +/- {1:.1f}".format(mean, se)

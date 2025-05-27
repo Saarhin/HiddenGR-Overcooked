@@ -12,6 +12,8 @@ from recipe_planner.recipe import *
 from tqdm import tqdm
 import re
 from misc.metrics.metrics_bag import Bag
+import os
+import csv
 
 class DQN(nn.Module):
     def __init__(self, in_states, h1_nodes, out_actions):
@@ -39,9 +41,9 @@ class ReplayMemory():
     def __len__(self):
         return len(self.memory)
     
-class FetcherDQNTrainer:
-    def __init__(self, fetcher_id, state_dim, action_dim, arglist):
-        self.env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=arglist)
+class DQNTrainer:
+    def __init__(self, fetcher_id, state_dim, action_dim, env, action_list, episodes, target_agent_name, arglist):
+        self.env = env
         self.fetcher_id = fetcher_id
         self.state_dim = state_dim
         self.action_dim = action_dim
@@ -49,9 +51,10 @@ class FetcherDQNTrainer:
         self.target_DQN = DQN(self.state_dim, 64, self.action_dim)
         self.target_DQN.load_state_dict(self.policy_DQN.state_dict())
         self.optimizer = torch.optim.Adam(self.policy_DQN.parameters(), lr=1e-3)
-        self.arglist = arglist
-        self.action_map = [(0, 0), (0, -1), (0, 1), (-1, 0), (1, 0)]
-        self.action_space = spaces.Discrete(len(self.action_map))
+        self.action_list = action_list
+        self.episodes = episodes
+        self.target_agent_name = target_agent_name
+        self.action_space = spaces.Discrete(len(self.action_list))
         self.loss_fn = nn.MSELoss()
         
 
@@ -67,6 +70,12 @@ class FetcherDQNTrainer:
         self.x = 0
         self.y = 0
         self.realAgents = None
+        self.arglist = arglist
+        folder_name = f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}"
+
+        if not os.path.exists(folder_name):
+            os.mkdir(folder_name)
+       
 
     def initialize_agents(self):
         real_agents = []
@@ -90,7 +99,7 @@ class FetcherDQNTrainer:
 
                     if count == 1:
                         # MAKE AGENT 2 A "HUMAN"
-                        print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
+                        # print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
                         real_agent = HybridAgent(
                             arglist=self.arglist,
                             name='agent-'+str(len(real_agents)+1),
@@ -103,7 +112,7 @@ class FetcherDQNTrainer:
                     elif count == 0:
                         x = int(loc[0])
                         y = int(loc[1])
-                        print(f'Initializing DQNFetcherAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
+                        # print(f'Initializing DQNFetcherAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
                         real_agent = DQNFetchingAgent(
                             arglist=self.arglist,
                             name='agent-'+str(len(real_agents)+1),
@@ -114,18 +123,18 @@ class FetcherDQNTrainer:
 
         return real_agents, x, y
 
-    def train(self, episodes):
+    def train(self):
 
         self.realAgents, self.x, self.y=self.initialize_agents()
 
         # might need to hardcode these
         num_states = self.state_dim
         num_actions = self.action_dim
-        reward_per_episode = np.zeros(episodes)
+        reward_per_episode = np.zeros(self.episodes)
 
         step_count = 0
 
-        for i in tqdm(range(episodes)):
+        for i in tqdm(range(self.episodes)):
             
             terminated = False
             truncated = False
@@ -135,6 +144,7 @@ class FetcherDQNTrainer:
             for agent in self.realAgents:
                     if agent.name == 'agent-2':
                         agent.target_item = target
+            print(target)
             state = self.env.reset(target)
 
 
@@ -143,7 +153,12 @@ class FetcherDQNTrainer:
 
                 for agent in self.realAgents:
                     if agent.name == 'agent-1':
-                        action, action_save = agent.select_action(obs=state,env=self.env, epsilon=self.epsilon, policy=self.policy_DQN)
+                        if self.arglist.dqn_input == "Full":
+                            dqn_input, is_empty = self.state_to_dqn_input(self.env.rep)
+                        elif self.arglist.dqn_input == "Summary":
+                            dqn_input = self.get_agent_specific_state(state)
+                            is_empty = False
+                        action, action_save = agent.select_action(obs=state,env=self.env, epsilon=self.epsilon, policy=self.policy_DQN, dqn_input=dqn_input, is_empty=is_empty)
                     else:
                         action = agent.select_action(obs=state)
                     action_dict[agent.name] = action
@@ -163,6 +178,7 @@ class FetcherDQNTrainer:
                 step_count += 1
 
             reward_per_episode[i] = sum_reward
+            print(sum_reward)
 
             if len(self.memory)>self.batch_size and np.sum(reward_per_episode)>0:
                 mini_batch = self.memory.sample(self.batch_size)
@@ -176,33 +192,27 @@ class FetcherDQNTrainer:
                     self.target_DQN.load_state_dict(self.policy_DQN.state_dict())
                     step_count=0
 
+            torch.save(self.policy_DQN.state_dict(), f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}/fetcher_dqn{i}.pt")
+            
+
         self.env.close()
 
-        torch.save(self.policy_DQN.state_dict(), "fetcher_dqn.pt")
-
-        plt.figure(1)
-
-        
-
-        plt.subplot(121)
-        plt.plot(reward_per_episode)
-
-        plt.subplot(122)
-        plt.plot(self.epsilon_history)
-
-        plt.savefig('frozen_lake_dqn.png')
+        with open(f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}/rewards.csv", "w", newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["episode", "reward"])  # optional header
+            for i, reward in enumerate(reward_per_episode):
+                writer.writerow([i, reward])
 
     def strip_ansi(self,text):
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
         return ansi_escape.sub('', text)
     
-    def state_to_dqn_input(self, state, num_states:int) -> torch.Tensor:
+    def state_to_dqn_input(self, obs) -> torch.Tensor:
         
-        clean_grid = [[self.strip_ansi(cell) for cell in row] for row in self.env.rep]
+        clean_grid = [[self.strip_ansi(cell) for cell in row] for row in obs]
         is_empty = False
         if clean_grid == []:
             is_empty = True
-
 
         symbol_to_onehot = {
             '-':    [1,0,0,0,0,0],
@@ -224,7 +234,96 @@ class FetcherDQNTrainer:
         input_tensor = torch.FloatTensor(onehot_vectors)
 
         return input_tensor, is_empty
+  
+    def get_agent_specific_state(self, env_state):
+        """
+        Create an agent-specific state representation to encourage role specialization.
+        
+        Args:
+            env_state: The environment state object
+            
+        Returns:
+            A state representation that includes agent-specific information
+        """ 
+        try:
+            target_agent = next((a for a in env_state.sim_agents if a.name == self.target_agent_name), None)
+            chef_agent = next((a for a in env_state.sim_agents if a.name != self.target_agent_name), None)
 
+            dqn_state = []
+
+            if target_agent and chef_agent:
+
+                # location of the fetcher
+                dqn_state.append(target_agent.location[0])
+                dqn_state.append(target_agent.location[1])
+
+                # location of the chef
+                dqn_state.append(chef_agent.location[0])
+                dqn_state.append(chef_agent.location[1])
+
+                # water location
+                water_found = False
+                for obj_name, obj in env_state.world.objects.items():
+                    if obj_name == "Plate-Water":
+                        dqn_state.append(obj[0].location[0])
+                        dqn_state.append(obj[0].location[1])
+                        water_found = True
+                        break
+
+                if not water_found: 
+                    dqn_state.append(-1)
+                    dqn_state.append(-1)
+
+                #Sushi location
+                sushi_found = False
+                for obj_name, obj in env_state.world.objects.items():
+                    if obj_name == "Plate-Sushi":
+                        dqn_state.append(obj[0].location[0])
+                        dqn_state.append(obj[0].location[1])
+                        sushi_found = True
+                        break
+
+                if not sushi_found: 
+                    dqn_state.append(-1)
+                    dqn_state.append(-1)
+
+                # Delivery location
+                delivery_found = False
+                for obj_name, obj in env_state.world.objects.items():
+                    if obj_name == "Delivery":
+                        dqn_state.append(obj[0].location[0])
+                        dqn_state.append(obj[0].location[1])
+                        delivery_found = True
+                        break
+
+                if not delivery_found: 
+                    dqn_state.append(-1)
+                    dqn_state.append(-1)
+
+                
+                if "water" in target_agent.get_holding().lower():
+                    dqn_state.append(1)
+                elif "sushi" in target_agent.get_holding().lower():
+                    dqn_state.append(2)
+                else:
+                    dqn_state.append(0)
+
+                if "water" in chef_agent.get_holding().lower():
+                    dqn_state.append(1)
+                elif "sushi" in chef_agent.get_holding().lower():
+                    dqn_state.append(2)
+                else:
+                    dqn_state.append(0)
+
+                # length of this state is 12
+               
+                return torch.FloatTensor(dqn_state)
+        except Exception as e:
+            print(f"Error creating agent-specific state: {e}")
+            
+        # Fallback to global state
+        return env_state.get_repr()
+    
     def optimize(self, mini_batch, policy_DQN, target_DQN):
         num_states = policy_DQN.fc1.in_features
 
@@ -258,7 +357,7 @@ class FetcherDQNTrainer:
         loss.backward()
         self.optimizer.step()
 
-    def test(self, episodes):
+    def test(self):
         
 
         self.realAgents, self.x, self.y=self.initialize_agents()

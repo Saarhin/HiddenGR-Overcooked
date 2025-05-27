@@ -4,12 +4,12 @@ from ml.common import PARTIAL_GOAL_REWARD
 
 
 def extract_offsets(blocks, predicates):
-    print('blocks order:', blocks)
-    print('predicate order:')
+    # print('blocks order:', blocks)
+    # print('predicate order:')
     offsets = {}
     i = 0
     for pred in predicates:
-        print('\t', pred)
+        # print('\t', pred)
         offsets[pred.name] = i
         num_lits = 1
         for t in pred.var_types:

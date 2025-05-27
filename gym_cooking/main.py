@@ -22,7 +22,7 @@ from ml.metrics import kl_divergence_norm_softmax, soft_divergence_point, trajec
 from ml.rl import TabularQLearner
 # -----------------------
 
-from belief import Belief
+from belief import OvercookedBeliefExperiment
 
 
 def parse_arguments():
@@ -76,6 +76,8 @@ def parse_arguments():
     # SARAH ADDED
     # We want the fetcher to have a belief of what the goal is
     parser.add_argument("--belief-experiments", action="store_true", default=False, help="Run belief agent")
+    parser.add_argument("--dqn-input", type=str, default="Summary",
+                        help="What type of input does the fetcher get? Full, Summary, Summary+belief(distance), Summary+belief(GVFs)")
 
 
     return parser.parse_args()
@@ -123,7 +125,7 @@ def initialize_agents(arglist):
                     
                     # MAKE AGENT 1 A FETCHINGAGENT
                     if len(real_agents)+1 == 1:
-                        print(f'Initializing FetchingAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
+                        #print(f'Initializing FetchingAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
                         real_agent = FetchingAgent(
                                 arglist=arglist,
                                 name='agent-'+str(len(real_agents)+1),
@@ -138,7 +140,7 @@ def initialize_agents(arglist):
 #                                 recipes=recipes)
 
                         # MAKE AGENT 2 A "HUMAN"
-                        print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
+                        #print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
                         real_agent = HybridAgent(
                             arglist=arglist,
                             name='agent-'+str(len(real_agents)+1),
@@ -188,7 +190,7 @@ def initialize_agents_bl(arglist):
                         #         arglist=arglist,
                         #         name='agent-'+str(len(real_agents)+1),
                         #         color=COLORS[len(real_agents)])
-                        print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
+                        #print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
                         real_agent = HybridAgent(
                             arglist=arglist,
                             name='agent-'+str(len(real_agents)+1),
@@ -204,7 +206,7 @@ def initialize_agents_bl(arglist):
 #                                 recipes=recipes)
 
                         # MAKE AGENT 2 A "HUMAN"
-                        print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
+                        #print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
                         real_agent = HybridAgent(
                             arglist=arglist,
                             name='agent-'+str(len(real_agents)+1),
@@ -219,7 +221,7 @@ def initialize_agents_bl(arglist):
 
 def main_loop(arglist):
     """The main loop for running experiments."""
-    print("Initializing environment and agents.")
+    #print("Initializing environment and agents.")
     env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=arglist)
     obs = env.reset()
     # game = GameVisualize(env)
@@ -256,43 +258,9 @@ def main_loop(arglist):
 
 def main_bl_loop(arglist):
     
-    b = Belief(arglist)
-    # print("Initializing environment and agents.")
-    # env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=arglist)
-    # obs = env.reset()
-    # # game = GameVisualize(env)
-    # real_agents = initialize_agents_bl(arglist=arglist)
-
-    # # Info bag for saving pkl files
-    # bag = Bag(arglist=arglist, filename=env.filename)
-    # bag.set_recipe(recipe_subtasks=env.all_subtasks)
-    
-
-    # while not env.done():
-    #     action_dict = {}
-
-    #     for agent in real_agents:
-    #         action = agent.select_action(obs=obs)
-    #         action_dict[agent.name] = action
-
-    #     obs, reward, done, info = env.step(action_dict=action_dict)
-       
-        
-
-    #     # Agents
-    #     for agent in real_agents:
-    #         # Only RealAgent needs to refresh subtasks
-    #         if not isinstance(agent, FetchingAgent):
-    #             agent.refresh_subtasks(world=env.world)
-
-    #     # Saving info
-    #     bag.add_status(cur_time=info['t'], real_agents=real_agents)
-
-
-    # # Saving final information before saving pkl file
-    # bag.set_collisions(collisions=env.collisions)
-    # bag.set_termination(termination_info=env.termination_info,
-    #         successful=env.successful)
+    fix_seed(seed=arglist.seed)
+    experiment = OvercookedBeliefExperiment(arglist)
+    experiment.setup()
 
 # -----------------------
 # -----------------------
@@ -314,7 +282,7 @@ def main_gr_experiments(arglist):
     experiment.setup()
     
     # Run the experiment with all agents using policies
-    print("Running experiments with all agents using policies")
+    #print("Running experiments with all agents using policies")
     results = experiment.run(num_trials=arglist.num_trials)
     
     # Visualize both agents working together with the policy
@@ -348,23 +316,23 @@ if __name__ == '__main__':
     # -----------------------
     # KIRIN ADDED
     if arglist.gr_experiments:
-        print("Running Goal Recognition experiments")
+        #print("Running Goal Recognition experiments")
         main_gr_experiments(arglist)
     # -----------------------
 
     elif arglist.belief_experiments:
-        print("Running goal recognition using belief")
+        #print("Running goal recognition using belief")
         main_bl_loop(arglist=arglist)
 
         
     elif arglist.play:
-        print("Running interactive play mode")
+        #print("Running interactive play mode")
         env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=arglist)
         env.reset()
         game = GamePlay(env.filename, env.world, env.sim_agents)
         game.on_execute()
     else:
-        print("Running regular Overcooked experiment")
+        #print("Running regular Overcooked experiment")
         model_types = [arglist.model1, arglist.model2, arglist.model3, arglist.model4]
         assert len(list(filter(lambda x: x is not None,
             model_types))) == arglist.num_agents, "num_agents should match the number of models specified"

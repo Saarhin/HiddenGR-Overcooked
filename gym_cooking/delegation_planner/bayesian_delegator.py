@@ -135,7 +135,7 @@ class BayesianDelegator(Delegator):
 
     def set_priors(self, obs, incomplete_subtasks, priors_type):
         """Setting the prior probabilities for subtask allocations."""
-        print('{} setting priors'.format(self.agent_name))
+        # print('{} setting priors'.format(self.agent_name))
         self.incomplete_subtasks = incomplete_subtasks
 
         probs = self.get_subtask_alloc_probs()
@@ -255,7 +255,7 @@ class BayesianDelegator(Delegator):
             A float probability update of whether agents in subtask_agent_names are
             performing subtask.
         """
-        print("[BayesianDelgation.prob_nav_actions] Calculating probs for subtask {} by {}".format(str(subtask), ' & '.join(subtask_agent_names)))
+        # print("[BayesianDelgation.prob_nav_actions] Calculating probs for subtask {} by {}".format(str(subtask), ' & '.join(subtask_agent_names)))
         assert len(subtask_agent_names) == 1 or len(subtask_agent_names) == 2
 
         # Perform inference over None subtasks.
@@ -313,7 +313,7 @@ class BayesianDelegator(Delegator):
                     break
 
             if are_adjacent and handoff_occurred:
-                print(f"Detected handoff action: {action}")
+                # print(f"Detected handoff action: {action}")
                 # Return a high probability for handoff actions since they're intentional
                 return 0.9
             else:
@@ -587,5 +587,5 @@ class BayesianDelegator(Delegator):
             self.probs.update(
                     subtask_alloc=subtask_alloc,
                     factor=update)
-            print("UPDATING: subtask_alloc {} by {}".format(subtask_alloc, update))
+            # print("UPDATING: subtask_alloc {} by {}".format(subtask_alloc, update))
         self.probs.normalize()

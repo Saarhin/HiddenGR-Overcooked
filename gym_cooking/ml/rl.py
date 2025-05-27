@@ -401,28 +401,28 @@ class TabularQLearner(RLAgent):
         Args:
             max_entries: Maximum number of state entries to print
         """
-        print("\n=== Q-Table Contents ===")
-        print(f"Total states in Q-table: {len(self.q_table)}")
+        # print("\n=== Q-Table Contents ===")
+        # print(f"Total states in Q-table: {len(self.q_table)}")
 
         if not self.q_table:
-            print("Q-table is empty.")
+            # print("Q-table is empty.")
             return
 
         # Get a sample of states to print
         states_to_print = list(self.q_table.keys())[:max_entries]
 
         for i, state in enumerate(states_to_print):
-            print(f"\nState {i+1}: {state}")
+            # print(f"\nState {i+1}: {state}")
             q_values = self.q_table[state]
 
             for action_idx, q_value in enumerate(q_values):
                 action = self.action_list[action_idx] if action_idx < len(self.action_list) else f"Action {action_idx}"
-                print(f"  {action}: {q_value:.2f}")
+                # print(f"  {action}: {q_value:.2f}")
 
         if len(self.q_table) > max_entries:
             print(f"\n... and {len(self.q_table) - max_entries} more states")
 
-        print("========================\n")
+        # print("========================\n")
 
         
     def constant_optimistic_initialization(self, init: Any) -> None:
@@ -433,7 +433,7 @@ class TabularQLearner(RLAgent):
         Args:
             init: The initial state from the environment
         """
-        print(f'Initializing Q-table with constant optimistic value of 100 for agent {self.target_agent_name or "unknown"}')
+        # print(f'Initializing Q-table with constant optimistic value of 100 for agent {self.target_agent_name or "unknown"}')
 
         # Reset the environment to get the initial state
         obs = self.env.reset()
@@ -445,7 +445,7 @@ class TabularQLearner(RLAgent):
         for action_idx in range(self.actions):
             self.set_q_value(state, action_idx, 100.0)
 
-        print(f'Initialized initial state with optimistic values')
+        # print(f'Initialized initial state with optimistic values')
 
         # Print the initialized Q-table
         self.print_q_table(max_entries=1)
@@ -588,8 +588,8 @@ class TabularQLearner(RLAgent):
 
         self.constant_optimistic_initialization(init)
 
-        print(f'LEARNING FOR GOAL: {getattr(init, "goal", "Unknown")}')
-        print(f'Using collaborative {self.__class__.__name__} for agent {self.target_agent_name or "unknown"}')
+        # print(f'LEARNING FOR GOAL: {getattr(init, "goal", "Unknown")}')
+        # print(f'Using collaborative {self.__class__.__name__} for agent {self.target_agent_name or "unknown"}')
 
         # Define action vectors mapping
         action_vectors = {
@@ -669,7 +669,7 @@ class TabularQLearner(RLAgent):
                                     action_dict[agent.name] = other_action
                                 except Exception as e:
                                     # Fallback to random if policy lookup fails
-                                    print(f"Policy lookup failed for {agent.name}: {e}")
+                                    # print(f"Policy lookup failed for {agent.name}: {e}")
                                     action_dict[agent.name] = random.choice(list(action_vectors.values()))
                             else:
                                 # Random exploration based on current phase rate
@@ -688,7 +688,7 @@ class TabularQLearner(RLAgent):
                     if done:
                         total_reward = 100.0 + collaborative_reward  # Bonus for completing the task
                 except Exception as e:
-                    print(f"Error during step: {e}")
+                    # print(f"Error during step: {e}")
                     next_state = state
                     total_reward = -1.0
                     done = False
@@ -719,14 +719,14 @@ class TabularQLearner(RLAgent):
                 if done_times <= 10:
                     patience += 1
                     if patience >= self.patience:
-                        print(f"Did not find goal after {n} episodes. Retrying.")
+                        # print(f"Did not find goal after {n} episodes. Retrying.")
                         raise InvalidAction("Did not learn")
                 else:
                     patience = 0
 
                 if done_times == 1000 and converged_at is None:
                     converged_at = n
-                    print(f"***Policy converged to goal at {converged_at}***")
+                    # print(f"***Policy converged to goal at {converged_at}***")
 
                 done_times = 0
 
@@ -774,7 +774,7 @@ class TabularQLearner(RLAgent):
             )
             return agent_state
         except Exception as e:
-            print(f"Error creating state for other agent: {e}")
+            # print(f"Error creating state for other agent: {e}")
             # Fallback to global state
             return env_state.get_repr()
 
@@ -798,13 +798,13 @@ class TabularQLearner(RLAgent):
             # Get all agents
             agents = obs.sim_agents
             if len(agents) < 2:
-                print("No collaboration reward: fewer than 2 agents")
+                # print("No collaboration reward: fewer than 2 agents")
                 return 0.0  # No collaboration possible with a single agent
 
             # Find our target agent
             target_agent = next((a for a in agents if a.name == self.target_agent_name), None)
             if not target_agent:
-                print(f"No collaboration reward: target agent '{self.target_agent_name}' not found")
+                # print(f"No collaboration reward: target agent '{self.target_agent_name}' not found")
                 return 0.0
 
             # 1. Reward for role division (pickup vs. delivery)
@@ -835,9 +835,9 @@ class TabularQLearner(RLAgent):
                 # Agents are specializing in different areas
                 role_division_reward = 0.5
                 collaborative_reward += role_division_reward
-                print(f"✓ REWARD: +{role_division_reward} for role division (pickup vs delivery)")
-                print(f"  - Pickup agents: {[a.name for a in pickup_agents]}")
-                print(f"  - Delivery agents: {[a.name for a in delivery_agents]}")
+                # print(f"✓ REWARD: +{role_division_reward} for role division (pickup vs delivery)")
+                # print(f"  - Pickup agents: {[a.name for a in pickup_agents]}")
+                # print(f"  - Delivery agents: {[a.name for a in delivery_agents]}")
             else:
                 print(f"✗ NO REWARD for role division - agents not properly divided")
                 if not pickup_agents:
@@ -866,9 +866,9 @@ class TabularQLearner(RLAgent):
             if agents_with_food and agents_without_food:
                 task_handling_reward = 0.3
                 collaborative_reward += task_handling_reward
-                print(f"✓ REWARD: +{task_handling_reward} for efficient task handling")
-                print(f"  - Agents with food: {[a.name for a in agents_with_food]}")
-                print(f"  - Agents without food: {[a.name for a in agents_without_food]}")
+                # print(f"✓ REWARD: +{task_handling_reward} for efficient task handling")
+                # print(f"  - Agents with food: {[a.name for a in agents_with_food]}")
+                # print(f"  - Agents without food: {[a.name for a in agents_without_food]}")
             else:
                 print(f"✗ NO REWARD for task handling - need some agents with food and some without")
                 if not agents_with_food:
@@ -900,8 +900,8 @@ class TabularQLearner(RLAgent):
                     agent_reward = 0.5 * proximity_reward  # Increased from 0.2 to 0.5
                     delivery_progress_reward += agent_reward
                     collaborative_reward += agent_reward
-                    print(f"✓ REWARD: +{agent_reward:.2f} for {agent.name} progress toward delivery")
-                    print(f"  - Distance to delivery: {min_distance}, proximity factor: {proximity_reward:.2f}")
+                    # print(f"✓ REWARD: +{agent_reward:.2f} for {agent.name} progress toward delivery")
+                    # print(f"  - Distance to delivery: {min_distance}, proximity factor: {proximity_reward:.2f}")
                 else:
                     print(f"✗ NO REWARD for {agent.name} delivery progress - no delivery location found")
 
@@ -916,10 +916,10 @@ class TabularQLearner(RLAgent):
                    for agent in agents_with_food):
                 strategic_position_reward = 0.4
                 collaborative_reward += strategic_position_reward
-                print(f"✓ REWARD: +{strategic_position_reward} for strategic team positioning")
-                print("  - Agents without food are near pickup while agents with food are near delivery")
+                # print(f"✓ REWARD: +{strategic_position_reward} for strategic team positioning")
+                # print("  - Agents without food are near pickup while agents with food are near delivery")
             else:
-                print(f"✗ NO REWARD for strategic positioning")
+                # print(f"✗ NO REWARD for strategic positioning")
                 empty_near_pickup = any(any(self._manhattan_distance(agent.location, loc) <= 2 
                                           for loc in food_pickup_locations)
                                       for agent in agents_without_food)
@@ -945,7 +945,7 @@ class TabularQLearner(RLAgent):
                 if handoff_detected:
                     handoff_reward += 0.5
                     collaborative_reward += 0.5
-                    print(f"✓ REWARD: +0.5 for handoff between {agent.name} and {target_agent.name}")
+                    # print(f"✓ REWARD: +0.5 for handoff between {agent.name} and {target_agent.name}")
                     break
 
             if handoff_reward == 0:
@@ -954,8 +954,8 @@ class TabularQLearner(RLAgent):
             reward_components['handoff'] = handoff_reward
 
             # Print summary
-            print(f"TOTAL COLLABORATIVE REWARD: {collaborative_reward:.2f}")
-            print(f"Reward components: {reward_components}")
+            # print(f"TOTAL COLLABORATIVE REWARD: {collaborative_reward:.2f}")
+            # print(f"Reward components: {reward_components}")
 
         except Exception as e:
             print(f"Error calculating collaborative reward: {e}")
@@ -979,7 +979,7 @@ class TabularQLearner(RLAgent):
                     obj and obj[0].location):
                     pickup_locs.append(obj[0].location)
 
-            print('Pickup Locs:', pickup_locs)
+            # print('Pickup Locs:', pickup_locs)
             
             # If we found pickup locations, return them
             if pickup_locs:
@@ -1005,7 +1005,7 @@ class TabularQLearner(RLAgent):
                      "service" in obj_name.lower()) and obj and obj[0].location):
                     delivery_locs.append(obj[0].location)
 
-            print('Delivery Locs:', delivery_locs)
+            # print('Delivery Locs:', delivery_locs)
             
             if delivery_locs:
                 return delivery_locs
@@ -1050,3 +1050,4 @@ class TabularQLearner(RLAgent):
             return False
         except:
             return False
+        

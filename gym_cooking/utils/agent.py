@@ -40,7 +40,7 @@ class RealAgent:
         self.color = id_color
         self.recipes = recipes
         self.target_item = target
-        print(self.recipes)
+        # print(self.recipes)
 
         # Bayesian Delegation.
         self.reset_subtasks()
@@ -138,22 +138,22 @@ class RealAgent:
         # Check whether subtask is complete.
         self.subtask_complete = False
         if self.subtask is None or len(self.subtask_agent_names) == 0:
-            print("{} has no subtask".format(color(self.name, self.color)))
+            # print("{} has no subtask".format(color(self.name, self.color)))
             return
         self.subtask_complete = self.is_subtask_complete(world)
-        print("{} done with {} according to planner: {}\nplanner has subtask {} with subtask object {}".format(
-            color(self.name, self.color),
-            self.subtask, self.is_subtask_complete(world),
-            self.planner.subtask, self.planner.goal_obj))
+        # print("{} done with {} according to planner: {}\nplanner has subtask {} with subtask object {}".format(
+        #     color(self.name, self.color),
+        #     self.subtask, self.is_subtask_complete(world),
+        #     self.planner.subtask, self.planner.goal_obj))
 
         # Refresh for incomplete subtasks.
         if self.subtask_complete:
             if self.subtask in self.incomplete_subtasks:
                 self.incomplete_subtasks.remove(self.subtask)
                 self.subtask_complete = True
-        print('{} incomplete subtasks:'.format(
-            color(self.name, self.color)),
-            ', '.join(str(t) for t in self.incomplete_subtasks))
+        # print('{} incomplete subtasks:'.format(
+        #     color(self.name, self.color)),
+        #     ', '.join(str(t) for t in self.incomplete_subtasks))
 
     def update_subtasks(self, env):
         """Update incomplete subtasks---relevant for Bayesian Delegation."""
@@ -190,7 +190,7 @@ class RealAgent:
 
     def plan(self, env, initializing_priors=False):
         """Plan next action---relevant for navigation planner."""
-        print('right before planning, {} had old subtask {}, new subtask {}, subtask complete {}'.format(self.name, self.subtask, self.new_subtask, self.subtask_complete))
+        # print('right before planning, {} had old subtask {}, new subtask {}, subtask complete {}'.format(self.name, self.subtask, self.new_subtask, self.subtask_complete))
 
         # Check whether this subtask is done.
         if self.new_subtask is not None:
@@ -218,8 +218,8 @@ class RealAgent:
                 other_agent_planners = self.delegator.get_other_agent_planners(
                         obs=copy.copy(env), backup_subtask=backup_subtask)
 
-            print("[ {} Planning ] Task: {}, Task Agents: {}".format(
-                self.name, self.new_subtask, self.new_subtask_agent_names))
+            # print("[ {} Planning ] Task: {}, Task Agents: {}".format(
+            #     self.name, self.new_subtask, self.new_subtask_agent_names))
 
             action = self.planner.get_next_action(
                     env=env, subtask=self.new_subtask,
@@ -238,7 +238,7 @@ class RealAgent:
         self.new_subtask = None
         self.new_subtask_agent_names = []
 
-        print('{} proposed action: {}\n'.format(self.name, self.action))
+        # print('{} proposed action: {}\n'.format(self.name, self.action))
 
     def def_subtask_completion(self, env):
         # Determine desired objects.
@@ -394,7 +394,7 @@ class HybridAgent:
         # Initialize target item based on recipes
         self.determine_target_item()
         
-        print(f"{self.name} initialized in SIMPLE mode, targeting: {self.target_item}")
+        # print(f"{self.name} initialized in SIMPLE mode, targeting: {self.target_item}")
 
     def __str__(self):
         return color(self.name[-1], self.color)
@@ -416,9 +416,9 @@ class HybridAgent:
                 # Default to Sushi if unable to determine
                 self.target_item = "Sushi"
                 
-            print(f"Recipe analysis: {recipe_str} -> Target: {self.target_item}")
+            # print(f"Recipe analysis: {recipe_str} -> Target: {self.target_item}")
         except Exception as e:
-            print(f"Error determining target item: {e}")
+            # print(f"Error determining target item: {e}")
             self.target_item = "Sushi"  # Default fallback
 
     def select_action(self, obs):
@@ -437,8 +437,8 @@ class HybridAgent:
         self.holding = sim_agent.holding
         self.action = sim_agent.action
 
-        print(previous_holding)
-        print(self.holding)
+        # print(previous_holding)
+        # print(self.holding)
 
         # Initialize delegator if needed for metrics tracking
         if self.delegator is None:
@@ -454,7 +454,7 @@ class HybridAgent:
         if self.mode == "SIMPLE":
             # Condition 1: The agent picked up an object
             if previous_holding is None and self.holding is not None:
-                print(f"{self.name} picked up {self.get_holding()}, switching to REAL_AGENT mode")
+                # print(f"{self.name} picked up {self.get_holding()}, switching to REAL_AGENT mode")
                 self.mode = "REAL_AGENT"
                 # Initialize the RealAgent
                 self.initialize_real_agent(obs, target = self.target_item)
@@ -464,11 +464,11 @@ class HybridAgent:
                 # Store the other agent's location if this is the first observation
                 if self.fetching_agent_prev_location is None:
                     self.fetching_agent_prev_location = fetching_agent.location
-                    print(f"Recorded other agent initial location: {self.fetching_agent_prev_location}")
+                    # print(f"Recorded other agent initial location: {self.fetching_agent_prev_location}")
                 # Check if the other agent has moved
                 elif fetching_agent.location != self.fetching_agent_prev_location or fetching_agent.holding is not None:
-                    print(f"Other agent moved from {self.fetching_agent_prev_location} to {fetching_agent.location}")
-                    print(f"{self.name} switching to REAL_AGENT mode")
+                    # print(f"Other agent moved from {self.fetching_agent_prev_location} to {fetching_agent.location}")
+                    # print(f"{self.name} switching to REAL_AGENT mode")
                     self.mode = "REAL_AGENT"
                     # Initialize the RealAgent
                     self.initialize_real_agent(obs, target = self.target_item)
@@ -482,7 +482,7 @@ class HybridAgent:
                 self.sync_attributes_from_real_agent()
                 return self.real_agent.select_action(obs)
             else:
-                print("Warning: real_agent not initialized properly")
+                # print("Warning: real_agent not initialized properly")
                 return (0, 0)
     
     def initialize_real_agent(self, obs, target):
@@ -509,9 +509,9 @@ class HybridAgent:
             # Update subtasks to ensure delegator is fully initialized
             self.real_agent.update_subtasks(env=obs)
 
-            print(f"Initialized RealAgent for {self.name} with proper subtask setup")
+            # print(f"Initialized RealAgent for {self.name} with proper subtask setup")
         except Exception as e:
-            print(f"Error initializing RealAgent: {e}")
+            # print(f"Error initializing RealAgent: {e}")
             import traceback
             traceback.print_exc()
             self.mode = "SIMPLE"  # Fallback to SIMPLE mode if initialization fails
@@ -520,7 +520,7 @@ class HybridAgent:
         """Determine action in SIMPLE mode - go for target item."""
         # If already holding the target, just stay in place
         if self.holding is not None:
-            print(f"{self.name} already holding {self.get_holding()}, waiting for mode switch")
+            # print(f"{self.name} already holding {self.get_holding()}, waiting for mode switch")
             return (0, 0)
 
         # Find locations of the target item
@@ -535,7 +535,7 @@ class HybridAgent:
                     for obj in obj_list:
                         if hasattr(obj, 'location') and obj.location:
                             target_locations.append(obj.location)
-                            print(f"Found {self.target_item} at {obj.location}")
+                            # print(f"Found {self.target_item} at {obj.location}")
         except Exception as e:
             print(f"Error finding target locations: {e}")
 
@@ -570,7 +570,7 @@ class HybridAgent:
 
         # If no path found to any target, use basic navigation as fallback
         if best_target is None:
-            print("No path found to any target, using basic navigation as fallback")
+            # print("No path found to any target, using basic navigation as fallback")
             closest_loc = min(target_locations, 
                              key=lambda loc: self.manhattan_distance(self.location, loc))
             #return self.navigate_to(closest_loc, obs)
@@ -1107,7 +1107,7 @@ class FetchingAgent:
 
             # If no valid paths are found, fallback to Manhattan distance
             if not possible_objects:
-                print("No valid path to any object using pathfinding, falling back to Manhattan distance")
+                # print("No valid path to any object using pathfinding, falling back to Manhattan distance")
 
                 # Recalculate using Manhattan distance instead
                 current_distances = {}
@@ -1129,13 +1129,13 @@ class FetchingAgent:
             return current_distances
 
         except Exception as e:
-            print(f"Error calculating object distances: {e}")
+            # print(f"Error calculating object distances: {e}")
             return None
 
     def return_to_origin_state(self, obs):
         """Return to the original starting location."""
         if self.location == self.original_location:
-            print(f"{self.name} has returned to original location: {self.original_location}")
+            # print(f"{self.name} has returned to original location: {self.original_location}")
             self.state = "DONE"
             self.delivery_complete = True
             self.returning_home = False
@@ -1163,7 +1163,7 @@ class FetchingAgent:
                 if (any(item.lower() in obj_name.lower() for item in ["sushi", "water", "egg", "bread"]) and 
                     obj_list and hasattr(obj_list[0], 'location') and obj_list[0].location):
                     self.fetchable_locations.append(obj_list[0].location)
-                    print(f"Found {obj_name} at location: {obj_list[0].location}")
+                    # print(f"Found {obj_name} at location: {obj_list[0].location}")
             
             # If we found pickup locations, we're done
             if self.fetchable_locations:
@@ -1177,10 +1177,10 @@ class FetchingAgent:
                 if (("counter" in obj_name.lower() or "table" in obj_name.lower()) and 
                     obj_list and hasattr(obj_list[0], 'location') and obj_list[0].location):
                     self.fetchable_locations.append(obj_list[0].location)
-                    print(f"Fallback: Found {obj_name} at location: {obj_list[0].location}")
+                    # print(f"Fallback: Found {obj_name} at location: {obj_list[0].location}")
                     
         except Exception as e:
-            print(f"Error finding fetchable objects: {e}")
+            # print(f"Error finding fetchable objects: {e}")
             # Default locations if all else fails
             self.fetchable_locations = [(2, 2), (3, 2), (4, 2)]
             
@@ -1207,7 +1207,7 @@ class FetchingAgent:
 
             if is_target_determined and self.target_object:
                 self.state = "FETCH"
-                print(f"{self.name} has determined target object: {self.target_object}")
+                # print(f"{self.name} has determined target object: {self.target_object}")
                 # Immediately start fetching
                 return self.fetch_state(obs, other_agent)
 
@@ -1231,7 +1231,7 @@ class FetchingAgent:
 
         # If we couldn't calculate distances, continue observing
         if not current_distances:
-            print("Could not calculate current distances, continuing to observe")
+            # print("Could not calculate current distances, continuing to observe")
             return False
 
         # Calculate the TOTAL change in distance from initial state to current state for each object
@@ -1241,7 +1241,7 @@ class FetchingAgent:
                 # Negative change means the agent has moved closer to the object since the start
                 change = current_distances[obj] - self.initial_distances[obj]
                 total_distance_changes[obj] = change
-                print(f"Total distance change for {obj}: {change} (initial: {self.initial_distances[obj]}, current: {current_distances[obj]})")
+                # print(f"Total distance change for {obj}: {change} (initial: {self.initial_distances[obj]}, current: {current_distances[obj]})")
 
         # Find the object with the most negative total change in distance (most approached since start)
         most_approached = None
@@ -1260,19 +1260,19 @@ class FetchingAgent:
 
         # Calculate the difference in total distance change
         total_change_difference = second_min_total_change - min_total_change
-        print(f"Total change difference between most approached ({most_approached}: {min_total_change}) and second most ({second_min_total_change}): {total_change_difference}")
+        # print(f"Total change difference between most approached ({most_approached}: {min_total_change}) and second most ({second_min_total_change}): {total_change_difference}")
 
         # Only transition to FETCH if one object is being approached significantly more than others
         # Significant difference threshold could be 1 or more steps
         if total_change_difference >= 1:
             self.target_object = most_approached
-            print(f"Agent is approaching {self.target_object} relatively more than others since the start, switching to FETCH state")
+            # print(f"Agent is approaching {self.target_object} relatively more than others since the start, switching to FETCH state")
             # Store current distances for next comparison (still needed for incremental updates)
             self.previous_distances = current_distances
             return True
         else:
             # If no clear approach pattern, continue observing
-            print("No clear approach pattern detected, continuing to observe")
+            # print("No clear approach pattern detected, continuing to observe")
             # Store current distances for next comparison
             self.previous_distances = current_distances
             return False
@@ -1521,7 +1521,7 @@ class FetchingAgent:
                     #print(f"Marked agent {agent.name} at {agent.location} as non-walkable")
 
         # Log walkable/non-walkable grid for debugging
-        print("Walkable grid status for fetcher:")
+        # print("Walkable grid status for fetcher:")
         for y in range(grid_height):
             row = ""
             for x in range(grid_width):
@@ -1529,14 +1529,14 @@ class FetchingAgent:
                     row += "O" if walkable_grid[(x, y)] else "X"
                 else:
                     row += "?"
-            print(row)
+            # print(row)
         return walkable_grid
 
     def fetch_state(self, obs, other_agent):
         """Fetch the target object using planner-based navigation."""
         # If already holding something, move to delivery
         if self.holding is not None:
-            print(f"{self.name} is now holding {self.holding.full_name}, moving to DELIVER state")
+            # print(f"{self.name} is now holding {self.holding.full_name}, moving to DELIVER state")
             self.state = "DELIVER"
             return self.deliver_state(obs, other_agent)
 
@@ -1553,18 +1553,18 @@ class FetchingAgent:
                 if self.target_object.lower() in obj_name.lower() and obj_list:
                     if hasattr(obj_list[0], 'location') and obj_list[0].location:
                         target_locations.append(obj_list[0].location)
-                        print(f"Found target {self.target_object} at {obj_list[0].location}")
+                        # print(f"Found target {self.target_object} at {obj_list[0].location}")
 
         except Exception as e:
             print(f"Error finding target object locations: {e}")
 
         if not target_locations:
-            print(f"Can't find the target object {self.target_object}, falling back to fetchable locations")
+            # print(f"Can't find the target object {self.target_object}, falling back to fetchable locations")
             target_locations = self.fetchable_locations
 
         if not target_locations:
             # Still no target, go back to observing
-            print(f"No target locations found, going back to OBSERVE state")
+            # print(f"No target locations found, going back to OBSERVE state")
             self.state = "OBSERVE"
             return self.observe_state(obs, other_agent)
 
@@ -1593,11 +1593,11 @@ class FetchingAgent:
                         closest_approach_point = adjacent
 
         if closest_loc is None:
-            print(f"No reachable target locations, going back to OBSERVE state")
+            # print(f"No reachable target locations, going back to OBSERVE state")
             self.state = "OBSERVE"
             return self.observe_state(obs, other_agent)
 
-        print(f"Heading to closest {self.target_object} at {closest_loc} (path length: {min_distance})")
+        # print(f"Heading to closest {self.target_object} at {closest_loc} (path length: {min_distance})")
 
         # If we're adjacent to the target, interact with it
         if self.is_adjacent(self.location, closest_loc):
@@ -1651,7 +1651,7 @@ class FetchingAgent:
         """Deliver the fetched object to the other agent using pathfinding."""
         if self.holding is None:
             # We don't have the object anymore, transition to RETURN state
-            print(f"{self.name} has delivered the object, now returning to original location: {self.original_location}")
+            # print(f"{self.name} has delivered the object, now returning to original location: {self.original_location}")
             self.state = "RETURN"
             self.returning_home = True
             return self.return_to_origin_state(obs)
@@ -1874,41 +1874,8 @@ class DQNFetchingAgent:
         if self.holding is None:
             return 'None'
         return self.holding.full_name
-    
-    def strip_ansi(self,text):
-        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
-        return ansi_escape.sub('', text)
-    
-    def state_to_dqn_input(self, obs) -> torch.Tensor:
-        
-        clean_grid = [[self.strip_ansi(cell) for cell in row] for row in obs]
-        is_empty = False
-        if clean_grid == []:
-            is_empty = True
-
-        symbol_to_onehot = {
-            '-':    [1,0,0,0,0,0],
-            '1':    [0,1,0,0,0,0],
-            '2':    [0,0,1,0,0,0],
-            '*':    [0,0,0,1,0,0],
-            'p-w':  [0,0,0,0,1,0],
-            'p-s':  [0,0,0,0,0,1],
-        }
-
-        onehot_vectors = []
-
-        for row in clean_grid:
-            for cell in row:
-                onehot = symbol_to_onehot.get(cell, [0,0,0,0,0,0])  
-                onehot_vectors.extend(onehot)
-
-        # Convert list to flat FloatTensor
-        input_tensor = torch.FloatTensor(onehot_vectors)
-
-        return input_tensor, is_empty
-
-    
-    def select_action(self, obs,env, epsilon, policy):
+     
+    def select_action(self, obs,env, epsilon, policy, dqn_input, is_empty=False):
     
         sim_agent = next((a for a in obs.sim_agents if a.name == self.name), None)
         # Update internal state from SimAgent
@@ -1921,11 +1888,9 @@ class DQNFetchingAgent:
             action = self.action_space.sample()
         else:
             with torch.no_grad():
-                dqn_indput, is_empty = self.state_to_dqn_input(env.rep)
 
                 if not is_empty:
-                    print(policy(dqn_indput))
-                    action = policy(dqn_indput).argmax().item()
+                    action = policy(dqn_input).argmax().item()
                 else:
                     action = self.action_space.sample()
         return self.action_map[action], action

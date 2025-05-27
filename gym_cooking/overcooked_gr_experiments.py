@@ -28,7 +28,7 @@ def extract_trajectory(env, policies=None, target_agent_name=None, max_steps=100
     Returns:
         List of (state, action) pairs for the target agent
     """
-    print(f"Starting trajectory extraction for agent {target_agent_name or 'first agent'}")
+    #print(f"Starting trajectory extraction for agent {target_agent_name or 'first agent'}")
     
     # Reset environment
     obs = env.reset()
@@ -38,13 +38,13 @@ def extract_trajectory(env, policies=None, target_agent_name=None, max_steps=100
     if target_agent_name:
         target_agent = next((a for a in sim_agents if a.name == target_agent_name), None)
         if target_agent is None:
-            print(f"ERROR: Could not find agent '{target_agent_name}'. Using first agent.")
+            #print(f"ERROR: Could not find agent '{target_agent_name}'. Using first agent.")
             target_agent = sim_agents[0] if sim_agents else None
     else:
         target_agent = sim_agents[0] if sim_agents else None
     
     if not target_agent:
-        print("ERROR: No agents found in environment")
+        #print("ERROR: No agents found in environment")
         return []
     
     # Start extracting trajectory
@@ -155,7 +155,7 @@ class OvercookedGRExperiment:
     
     def setup(self):
         """Set up the experiment environment and recognizer"""
-        print("Setting up experiment environment...")
+        #print("Setting up experiment environment...")
         
         # Initialize environment - ensure record flag is passed correctly
         self.env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=self.arglist)
@@ -173,10 +173,10 @@ class OvercookedGRExperiment:
         
         # Try to load pre-trained policies
         if not self.recognizer.load_policies(self.env, self.recipes):
-            print("Pre-trained policies not found. Training new policies...")
+            #print("Pre-trained policies not found. Training new policies...")
             self.recognizer.train_policies(self.env, self.recipes, self.arglist)
         
-        print(f"Setup complete. Found {len(self.recipes)} recipes.")
+        #print(f"Setup complete. Found {len(self.recipes)} recipes.")
     
     def run(self, num_trials=10):
         """
@@ -185,15 +185,15 @@ class OvercookedGRExperiment:
         Args:
             num_trials: Number of trials to run for each recipe
         """
-        print(f"Running {num_trials} trials for each recipe with agent-specific policies...")
+        #print(f"Running {num_trials} trials for each recipe with agent-specific policies...")
         
         # Execute trials
         for trial in range(num_trials):
-            print(f"Trial {trial+1}/{num_trials}")
+            #print(f"Trial {trial+1}/{num_trials}")
             
             # For each recipe
             for recipe_idx, recipe in enumerate(self.recipes):
-                print(f"Testing recipe {recipe_idx+1}/{len(self.recipes)}: {recipe}")
+                #print(f"Testing recipe {recipe_idx+1}/{len(self.recipes)}: {recipe}")
                 
                 # Reset environment
                 obs = self.env.reset()
@@ -206,7 +206,7 @@ class OvercookedGRExperiment:
                     if hasattr(self.env, 'game'):
                         if hasattr(self.env.game, 'record'):
                             self.env.game.record = True
-                            print(f"Game record flag set to {self.env.game.record}")
+                            #print(f"Game record flag set to {self.env.game.record}")
                 
                 # Generate full trajectories for ALL agents using the relevant policies
                 full_trajectories = {}
@@ -220,14 +220,14 @@ class OvercookedGRExperiment:
                     )
                     
                     if len(trajectory) == 0:
-                        print(f"Warning: Empty trajectory generated for {target_agent_name}. Skipping.")
+                        #print(f"Warning: Empty trajectory generated for {target_agent_name}. Skipping.")
                         break
                     
                     full_trajectories[target_agent_name] = trajectory
                 
                 # Skip this recipe if any agent has an empty trajectory
                 if len(full_trajectories) != self.arglist.num_agents:
-                    print("Skipping recipe due to incomplete trajectories")
+                    # print("Skipping recipe due to incomplete trajectories")
                     continue
                 
                 # Test different observation levels
@@ -250,7 +250,7 @@ class OvercookedGRExperiment:
                             is_correct = predicted_goal == recipe_idx
                             level_results.append(float(is_correct))
                             
-                            print(f"{agent_name}, Obs level {obs_level}: Predicted {predicted_goal}, Actual {recipe_idx}, Correct: {is_correct}")
+                            # print(f"{agent_name}, Obs level {obs_level}: Predicted {predicted_goal}, Actual {recipe_idx}, Correct: {is_correct}")
                         except Exception as e:
                             print(f"Error in recognition for {agent_name} at obs level {obs_level}: {e}")
                     
@@ -281,7 +281,7 @@ class OvercookedGRExperiment:
         """
         import time
         
-        print(f"Visualizing agent behavior for recipe {recipe_idx}")
+        # print(f"Visualizing agent behavior for recipe {recipe_idx}")
         
         # Reset environment
         obs = self.env.reset()
@@ -293,7 +293,7 @@ class OvercookedGRExperiment:
         if hasattr(self.env, 'game'):
             if hasattr(self.env.game, 'record'):
                 self.env.game.record = True
-                print("Recording enabled for visualization")
+                # print("Recording enabled for visualization")
         
         # Run the visualization
         done = False
@@ -332,7 +332,7 @@ class OvercookedGRExperiment:
                                 # Default to random action
                                 action_idx = random.randint(0, 4)
                     except Exception as e:
-                        print(f"Error getting policy action for {agent.name}: {e}")
+                        # print(f"Error getting policy action for {agent.name}: {e}")
                         action_idx = random.randint(0, 4)
                 else:
                     # No policy available, use random action
@@ -342,7 +342,7 @@ class OvercookedGRExperiment:
                 action = actions[action_idx]
                 action_dict[agent.name] = action
                 
-                print(f"{agent.name} at {agent.location} holding {agent.get_holding()} takes action {action}")
+                # print(f"{agent.name} at {agent.location} holding {agent.get_holding()} takes action {action}")
             
             # Take action in environment
             obs, reward, done, _ = self.env.step(action_dict)
@@ -359,7 +359,7 @@ class OvercookedGRExperiment:
             steps += 1
             
             # Print step information
-            print(f"Step {steps}: Reward {reward}, Done {done}")
+            # print(f"Step {steps}: Reward {reward}, Done {done}")
             
             if done:
                 print("Goal achieved!")
@@ -384,7 +384,7 @@ class OvercookedGRExperiment:
     
     def analyze_results(self):
         """Analyze and visualize the results"""
-        print("\nOvercooked Goal Recognition Results (Agent-Specific Policies):")
+        # print("\nOvercooked Goal Recognition Results (Agent-Specific Policies):")
         
         # Calculate accuracy for each observation level
         accuracies = {}
@@ -398,7 +398,7 @@ class OvercookedGRExperiment:
         # Calculate overall accuracy
         if len(self.results['full']) > 0:
             avg_full = sum(self.results['full']) / len(self.results['full'])
-            print(f"Average accuracy across all observation levels: {avg_full:.4f}")
+            # print(f"Average accuracy across all observation levels: {avg_full:.4f}")
         
         # Plot results
         self._plot_results(accuracies)

@@ -14,7 +14,7 @@ class SubtaskAllocDistribution():
         if len(subtask_allocs) == 0:
             return
         prior = 1./(len(subtask_allocs))
-        print('set prior', prior)
+        # print('set prior', prior)
 
         for subtask_alloc in subtask_allocs:
             self.probs[tuple(subtask_alloc)] = prior

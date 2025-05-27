@@ -76,14 +76,14 @@ class OvercookedRecognizer:
         # For each agent role
         for agent_idx in range(num_agents):
             agent_name = f"agent-{agent_idx+1}"
-            print(f"Training policies for {agent_name}")
+            # print(f"Training policies for {agent_name}")
             
             # Initialize policy list for this agent
             self.policies[agent_name] = []
             
             # For each recipe, train a specific policy for this agent
             for recipe_idx, recipe in enumerate(recipe_list):
-                print(f"Training policy for {agent_name} on recipe {recipe_idx}: {recipe}")
+                # print(f"Training policy for {agent_name} on recipe {recipe_idx}: {recipe}")
                 
                 # Reset environment
                 obs = env.reset()
@@ -100,16 +100,16 @@ class OvercookedRecognizer:
                 
                 # Train policy
                 try:
-                    print(f"Training {agent_name} policy for recipe {recipe_idx}")
+                    # print(f"Training {agent_name} policy for recipe {recipe_idx}")
                     policy.learn(init_threshold=20)
-                    print(f"Successfully trained policy with {len(policy.q_table)} states in Q-table")
+                    # print(f"Successfully trained policy with {len(policy.q_table)} states in Q-table")
                     self.policies[agent_name].append(policy)
                     
                     # Save policy to disk
                     self._save_policy(policy, recipe_idx, recipe, agent_name)
                     
                 except Exception as e:
-                    print(f"Error training policy for {agent_name} on recipe {recipe_idx}: {e}")
+                    # print(f"Error training policy for {agent_name} on recipe {recipe_idx}: {e}")
                     # Create a dummy policy
                     dummy_policy = self.method(env=env, init_obs=obs, problem=recipe_idx, action_list=self.actions)
                     self.policies[agent_name].append(dummy_policy)
@@ -152,7 +152,7 @@ class OvercookedRecognizer:
             for recipe_idx, recipe in enumerate(recipe_list):
                 try:
                     policy_path = f"trained_policies/sim_{agent_name}_recipe_{recipe_idx}.json"
-                    print(f"Loading policy from {policy_path}")
+                    # print(f"Loading policy from {policy_path}")
                     
                     with open(policy_path, 'r') as f:
                         policy_data = json.load(f)
@@ -176,16 +176,16 @@ class OvercookedRecognizer:
                             policy.q_table[state] = actions
                             loaded_states += 1
                         except Exception as e:
-                            print(f"Error parsing state {state_key[:50]}...: {str(e)[:100]}")
+                            # print(f"Error parsing state {state_key[:50]}...: {str(e)[:100]}")
                             # Fall back to using the string key
                             policy.q_table[state_key] = actions
                     
                     self.policies[agent_name].append(policy)
                     policies_loaded += 1
-                    print(f"Loaded policy for {agent_name} on recipe {recipe_idx} with {loaded_states} states")
+                    # print(f"Loaded policy for {agent_name} on recipe {recipe_idx} with {loaded_states} states")
                     
                 except Exception as e:
-                    print(f"Could not load policy for {agent_name} on recipe {recipe_idx}: {e}")
+                    # print(f"Could not load policy for {agent_name} on recipe {recipe_idx}: {e}")
                     # Create a dummy policy as fallback
                     policy = self.method(
                         env=env, 
@@ -213,7 +213,7 @@ class OvercookedRecognizer:
             raise ValueError("No policies have been trained. Call train_policies first.")
         
         if not trajectory:
-            print("WARNING: Empty trajectory provided to recognize_goal")
+            # print("WARNING: Empty trajectory provided to recognize_goal")
             # Return a random prediction for empty trajectory
             return 0, [(i, 1.0 - (i*0.1)) for i in range(len(self.policies))]
         
@@ -225,7 +225,7 @@ class OvercookedRecognizer:
                 divergence = self._calculate_divergence(trajectory, policy, epsilon)
                 divergences.append((i, divergence))
             except Exception as e:
-                print(f"Error calculating divergence for policy {i}: {e}")
+                # print(f"Error calculating divergence for policy {i}: {e}")
                 # Add a default high divergence
                 divergences.append((i, 1000.0))
         
@@ -242,7 +242,7 @@ class OvercookedRecognizer:
             # Use the evaluation function provided in the constructor
             return self.evaluation(trajectory, policy.q_table, self.actions, epsilon=epsilon)
         except Exception as e:
-            print(f"Error in divergence calculation: {e}")
+            # print(f"Error in divergence calculation: {e}")
             # Return a high divergence as fallback
             return 1000.0
     
@@ -258,7 +258,7 @@ class OvercookedRecognizer:
             Partially observed trajectory
         """
         if not trajectory:
-            print("WARNING: Empty trajectory provided to observe_trajectory")
+            # print("WARNING: Empty trajectory provided to observe_trajectory")
             return []
             
         if obs_level >= 1.0:
