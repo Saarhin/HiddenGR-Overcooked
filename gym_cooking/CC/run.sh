@@ -15,7 +15,8 @@ source $SLURM_TMPDIR/env/bin/activate
 python -m pip install --no-index --upgrade pip
 
 python -m pip install -r requirements.txt
-
+python -m pip install networkx
+python -m pip install matplotlib
 
 cd gym_cooking
 
