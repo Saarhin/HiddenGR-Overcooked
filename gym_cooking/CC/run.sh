@@ -15,6 +15,7 @@ source $SLURM_TMPDIR/env/bin/activate
 python -m pip install --no-index --upgrade pip
 
 python -m pip install -e .
+python -m pip install networkx
 
 cd gym_cooking
 

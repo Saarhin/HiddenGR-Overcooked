@@ -29,9 +29,7 @@ setup(
         'six>=1.15.0',
         'termcolor>=1.1.0',
         'tqdm>=4.50.1',
-        'torch==2.7.0',
-        'networkx==3.2.1',
-        'tqdm==4.67.1'
+        'torch==2.7.0'
 
     ]
 )
