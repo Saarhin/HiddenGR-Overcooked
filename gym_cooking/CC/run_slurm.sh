@@ -14,7 +14,7 @@ module load python/3.10
 virtualenv --no-download env
 source env/bin/activate
 
-cp -r /home/$USER/scratch/rlprj/HiddenGR-Overcooked $SLURM_TMPDIR
+cp -r /home/$USER/scratch/HiddenGR-Overcooked $SLURM_TMPDIR
 
 cd ./HiddenGR-Overcooked
 # Upgrade pip using local wheels only
