@@ -14,9 +14,8 @@ virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
 python -m pip install --no-index --upgrade pip
 
-python -m pip install -e .
-python -m pip install networkx
-python -m pip install matplotlib
+python -m pip install -r requirements.txt
+
 
 cd gym_cooking
 
