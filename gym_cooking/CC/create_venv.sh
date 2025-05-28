@@ -1,5 +1,6 @@
 salloc --time=0:45:0 --ntasks=1 --mem-per-cpu="4G" --account=def-mtaylor3
 cd $SLURM_TMPDIR
+module load python/3.10
 python -m venv .venv
 source .venv/bin/activate
 cp /home/$USER/scratch/HiddenGR-Overcooked/requirements.txt $SLURM_TMPDIR
