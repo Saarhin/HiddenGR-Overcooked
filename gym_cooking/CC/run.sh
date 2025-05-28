@@ -10,8 +10,8 @@
 #SBATCH --account=def-mtaylor3
 
 module load python/3.10
-tar -xf venv.tar.xz
-source .venv/bin/activate
+
+source marl/bin/activate
 
 cd gym_cooking
 
