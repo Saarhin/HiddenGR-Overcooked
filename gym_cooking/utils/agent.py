@@ -466,12 +466,12 @@ class HybridAgent:
                     self.fetching_agent_prev_location = fetching_agent.location
                     # print(f"Recorded other agent initial location: {self.fetching_agent_prev_location}")
                 # Check if the other agent has moved
-                elif fetching_agent.location != self.fetching_agent_prev_location or fetching_agent.holding is not None:
-                    # print(f"Other agent moved from {self.fetching_agent_prev_location} to {fetching_agent.location}")
-                    # print(f"{self.name} switching to REAL_AGENT mode")
-                    self.mode = "REAL_AGENT"
-                    # Initialize the RealAgent
-                    self.initialize_real_agent(obs, target = self.target_item)
+                # elif fetching_agent.location != self.fetching_agent_prev_location or fetching_agent.holding is not None:
+                #     # print(f"Other agent moved from {self.fetching_agent_prev_location} to {fetching_agent.location}")
+                #     # print(f"{self.name} switching to REAL_AGENT mode")
+                #     self.mode = "REAL_AGENT"
+                #     # Initialize the RealAgent
+                #     self.initialize_real_agent(obs, target = self.target_item)
 
         # Choose action based on current mode
         if self.mode == "SIMPLE":

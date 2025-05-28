@@ -20,7 +20,7 @@ class OvercookedFetcherDQN:
             action_dim=5,
             env=env,
             action_list= self.actions,
-            episodes=5,
+            episodes=10000,
             target_agent_name="agent-1",
             arglist=arglist)
         

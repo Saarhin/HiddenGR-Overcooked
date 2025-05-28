@@ -125,7 +125,7 @@ class DQNTrainer:
 
     def train(self):
 
-        self.realAgents, self.x, self.y=self.initialize_agents()
+        
 
         # might need to hardcode these
         num_states = self.state_dim
@@ -135,6 +135,7 @@ class DQNTrainer:
         step_count = 0
 
         for i in tqdm(range(self.episodes)):
+            self.realAgents, self.x, self.y=self.initialize_agents()
             
             terminated = False
             truncated = False
