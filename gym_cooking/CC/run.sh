@@ -17,6 +17,7 @@ python -m pip install --no-index --upgrade pip
 python -m pip install -r requirements.txt
 python -m pip install networkx
 python -m pip install matplotlib
+python -m pip install termcolor
 
 cd gym_cooking
 
