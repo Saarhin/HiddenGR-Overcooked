@@ -817,6 +817,8 @@ class HybridAgent:
     
     def manhattan_distance(self, pos1, pos2):
         """Calculate Manhattan distance between two positions."""
+        if pos1 is None or pos2 is None:
+            return 14
         return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
     
     def is_adjacent(self, pos1, pos2):

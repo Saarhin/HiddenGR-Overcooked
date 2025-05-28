@@ -10,15 +10,8 @@
 #SBATCH --account=def-mtaylor3
 
 module load python/3.10
-virtualenv --no-download $SLURM_TMPDIR/env
-source $SLURM_TMPDIR/env/bin/activate
-
-# Upgrade pip using local wheels only
-python -m pip install --no-index --upgrade pip --find-links=$EB_PYTHON_WHL
-
-# Install dependencies from Compute Canada wheels
-python -m pip install --no-index --find-links=$EB_PYTHON_WHL -r requirements.txt
-python -m pip install --no-index --find-links=$EB_PYTHON_WHL networkx matplotlib termcolor
+tar -xf venv.tar.xz
+source .venv/bin/activate
 
 cd gym_cooking
 

@@ -162,7 +162,10 @@ class DQNTrainer:
                         action, action_save = agent.select_action(obs=state,env=self.env, epsilon=self.epsilon, policy=self.policy_DQN, dqn_input=dqn_input, is_empty=is_empty)
                     else:
                         action = agent.select_action(obs=state)
+                        if action is None:
+                            action = (0, 0)
                     action_dict[agent.name] = action
+                print(action_dict)
 
                 new_state, reward, terminated, _ = self.env.step(action_dict, target)
 
