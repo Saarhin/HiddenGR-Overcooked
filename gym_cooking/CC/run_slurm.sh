@@ -9,16 +9,19 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --account=def-mtaylor3
 
+cd $SLURM_TMPDIR
 module load python/3.10
-virtualenv --no-download $SLURM_TMPDIR/env
-source $SLURM_TMPDIR/env/bin/activate
+virtualenv --no-download env
+source env/bin/activate
 
+cp /home/$USER/scratch/rlprj/HiddenGR-Overcooked $SLURM_TMPDIR
+
+cd ./HiddenGR-Overcooked
 # Upgrade pip using local wheels only
-python -m pip install --no-index --upgrade pip --find-links=$EB_PYTHON_WHL
+python -m pip install --no-index --upgrade pip
 
 # Install dependencies from Compute Canada wheels
-python -m pip install --no-index --find-links=$EB_PYTHON_WHL -r requirements.txt
-python -m pip install --no-index --find-links=$EB_PYTHON_WHL networkx matplotlib termcolor
+python -m pip install --no-index  -r requirements.txt
 
 cd gym_cooking
 
