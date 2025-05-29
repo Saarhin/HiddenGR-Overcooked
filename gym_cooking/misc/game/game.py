@@ -4,7 +4,7 @@ import numpy as np
 from utils.core import *
 from misc.game.utils import *
 
-graphics_dir = 'misc/game/graphics'
+graphics_dir = 'gym_cooking/misc/game/graphics'
 _image_library = {}
 
 def get_image(path):
