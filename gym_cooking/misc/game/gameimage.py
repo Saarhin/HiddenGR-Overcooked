@@ -9,7 +9,7 @@ from misc.game.game import Game
 class GameImage(Game):
     def __init__(self, filename, world, sim_agents, record=False):
         Game.__init__(self, world, sim_agents)
-        self.game_record_dir = 'misc/game/record/{}/'.format(filename)
+        self.game_record_dir = 'gym_cooking/misc/game/record/{}/'.format(filename)
         self.record = record
 
 
