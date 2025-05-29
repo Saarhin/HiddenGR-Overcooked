@@ -13,7 +13,7 @@ module load python/3.10
 
 source marl/bin/activate
 
-export PYTHONPATH="${PYTHONPATH}:/scratch/saarhin/HiddenGR-Overcooked"
+export PYTHONPATH="${PYTHONPATH}:/home/scratch/saarhin/HiddenGR-Overcooked"
 
 
 PARAMS=$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" ./gym_cooking/CC/parameters.txt)
