@@ -15,7 +15,8 @@ source marl/bin/activate
 
 export PYTHONPATH="${PYTHONPATH}:/home/scratch/saarhin/HiddenGR-Overcooked"
 
+cd gym_cooking
 
-PARAMS=$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" ./gym_cooking/CC/parameters.txt)
+PARAMS=$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" ./CC/parameters.txt)
 
-python ./gym_cooking/main.py $PARAMS
+python main.py $PARAMS

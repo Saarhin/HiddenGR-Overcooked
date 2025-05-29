@@ -91,7 +91,7 @@ class OvercookedEnvironment(gym.Env):
     def load_level(self, level, num_agents):
         x = 0
         y = 0
-        with open('./gym_cooking/utils/levels/{}.txt'.format(level), 'r') as file:
+        with open('utils/levels/{}.txt'.format(level), 'r') as file:
             # Mark the phases of reading.
             phase = 1
             for line in file:
