@@ -79,7 +79,7 @@ class DQNTrainer:
 
     def initialize_agents(self):
         real_agents = []
-        with open('utils/levels/{}.txt'.format(self.arglist.level), 'r') as f:
+        with open('/gym_cooking/utils/levels/{}.txt'.format(self.arglist.level), 'r') as f:
             phase = 1
             recipes = []
             count = 0
