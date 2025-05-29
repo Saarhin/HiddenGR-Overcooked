@@ -13,8 +13,9 @@ module load python/3.10
 
 source marl/bin/activate
 
-cd gym_cooking
+export PYTHONPATH="${PYTHONPATH}:/scratch/saarhin/HiddenGR-Overcooked"
 
-PARAMS=$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" ./CC/parameters.txt)
 
-python main.py $PARAMS
+PARAMS=$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" ./gym_cooking/CC/parameters.txt)
+
+python ./gym_cooking/main.py $PARAMS
