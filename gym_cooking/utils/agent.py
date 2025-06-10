@@ -466,12 +466,12 @@ class HybridAgent:
                     self.fetching_agent_prev_location = fetching_agent.location
                     # print(f"Recorded other agent initial location: {self.fetching_agent_prev_location}")
                 # Check if the other agent has moved
-                # elif fetching_agent.location != self.fetching_agent_prev_location or fetching_agent.holding is not None:
-                #     # print(f"Other agent moved from {self.fetching_agent_prev_location} to {fetching_agent.location}")
-                #     # print(f"{self.name} switching to REAL_AGENT mode")
-                #     self.mode = "REAL_AGENT"
-                #     # Initialize the RealAgent
-                #     self.initialize_real_agent(obs, target = self.target_item)
+                elif fetching_agent.location != self.fetching_agent_prev_location or fetching_agent.holding is not None:
+                    # print(f"Other agent moved from {self.fetching_agent_prev_location} to {fetching_agent.location}")
+                    # print(f"{self.name} switching to REAL_AGENT mode")
+                    self.mode = "REAL_AGENT"
+                    # Initialize the RealAgent
+                    self.initialize_real_agent(obs, target = self.target_item)
 
         # Choose action based on current mode
         if self.mode == "SIMPLE":
@@ -516,6 +516,486 @@ class HybridAgent:
             traceback.print_exc()
             self.mode = "SIMPLE"  # Fallback to SIMPLE mode if initialization fails
     
+    def simple_mode_action(self, obs):
+        """Determine action in SIMPLE mode - go for target item."""
+        # If already holding the target, just stay in place
+        if self.holding is not None:
+            # print(f"{self.name} already holding {self.get_holding()}, waiting for mode switch")
+            return (0, 0)
+
+        # Find locations of the target item
+        target_locations = []
+        try:
+            # Look for target item in environment
+            for obj_name, obj_list in obs.world.objects.items():
+                if not obj_list:
+                    continue
+
+                if self.target_item.lower() in obj_name.lower() and obj_list:
+                    for obj in obj_list:
+                        if hasattr(obj, 'location') and obj.location:
+                            target_locations.append(obj.location)
+                            # print(f"Found {self.target_item} at {obj.location}")
+        except Exception as e:
+            print(f"Error finding target locations: {e}")
+
+        # Get walkable grid for pathfinding
+        walkable_grid = self.get_walkable_grid(obs)
+
+        # Make sure target locations are walkable for pathfinding
+        for loc in target_locations:
+            walkable_grid[loc] = True
+
+        # Find best target and path
+        best_target = None
+        best_approach = None
+        best_path_length = float('inf')
+
+        for loc in target_locations:
+            # If we can interact directly with the object
+            if self.is_adjacent(self.location, loc):
+                best_target = loc
+                best_approach = self.location
+                break
+
+            # Find shortest path to any cell adjacent to the target
+            for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                adjacent = (loc[0] + dx, loc[1] + dy)
+                if adjacent in walkable_grid and walkable_grid[adjacent]:
+                    path_length = self.shortest_path_length(walkable_grid, self.location, adjacent)
+                    if path_length < best_path_length and path_length != float('inf'):
+                        best_path_length = path_length
+                        best_target = loc
+                        best_approach = adjacent
+
+        # If no path found to any target, use basic navigation as fallback
+        if best_target is None:
+            # print("No path found to any target, using basic navigation as fallback")
+            closest_loc = min(target_locations, 
+                             key=lambda loc: self.manhattan_distance(self.location, loc))
+            #return self.navigate_to(closest_loc, obs)
+
+        # If we're adjacent to the target, interact with it
+        if self.is_adjacent(self.location, best_target):
+            return self.get_direction_to(self.location, best_target)
+
+        # Otherwise, use pathfinding to navigate
+        next_step = self.get_next_step_in_path(walkable_grid, self.location, best_approach)
+        if next_step:
+            return self.get_direction_to(self.location, next_step)
+
+        # Fallback to basic navigation if pathfinding fails
+        #return self.navigate_to(best_target, obs)
+    
+    def get_holding(self):
+        """Return the name of the held object."""
+        if self.holding is None:
+            return 'None'
+        return self.holding.full_name
+    
+    def get_walkable_grid(self, obs):
+        """Create a grid representing walkable areas, avoiding counters, obstacles, and other agents.
+        Returns:
+            dict: A dictionary mapping (x, y) coordinates to True if walkable, False if not
+        """
+        walkable_grid = {}
+        # Get the grid dimensions from the environment if available
+        grid_width, grid_height = 10, 10  # Default dimensions
+        if hasattr(obs, 'world') and hasattr(obs.world, 'width') and hasattr(obs.world, 'height'):
+            grid_width, grid_height = obs.world.width, obs.world.height
+        # Initialize all positions as walkable
+        for x in range(grid_width):
+            for y in range(grid_height):
+                walkable_grid[(x, y)] = True
+                
+        # Mark delivery stations as non-walkable
+        try:
+            for obj_name, obj_list in obs.world.objects.items():
+                if not obj_list:
+                    continue
+                # Look for delivery stations
+                if "delivery" in obj_name.lower() and obj_list:
+                    for delivery_station in obj_list:
+                        if hasattr(delivery_station, 'location') and delivery_station.location:
+                            walkable_grid[delivery_station.location] = False
+                            #print(f"Marked delivery station at {delivery_station.location} as non-walkable")
+        except Exception as e:
+            print(f"Error marking delivery stations: {e}")
+        
+        # Mark counter positions as non-walkable
+        try:
+            for obj_name, obj_list in obs.world.objects.items():
+                if not obj_list:
+                    continue
+                # Look for counters and other obstacles
+                if ("counter" in obj_name.lower() or "table" in obj_name.lower() or 
+                    "wall" in obj_name.lower() or "obstacle" in obj_name.lower()):
+                    for obj in obj_list:
+                        if hasattr(obj, 'location') and obj.location:
+                            # Mark as non-walkable by default
+                            walkable_grid[obj.location] = False
+
+                            # Check if this is a food location and matches our target
+                            for f_name, f_list in obs.world.objects.items():
+                                if any(item.lower() in f_name.lower() for item in ["sushi", "water", "egg", "bread"]) and f_list:
+                                    for food in f_list:
+                                        if hasattr(food, 'location') and food.location == obj.location:
+                                            # Only make walkable if it's our target item
+                                            if hasattr(self, 'target_item') and self.target_item.lower() in f_name.lower():
+                                                walkable_grid[obj.location] = True
+                                                #print(f"Keeping {obj.location} walkable because it has our target: {self.target_item}")
+                                            #else:
+                                                #print(f"Marked {obj.location} as non-walkable because it has food we don't want")
+        except Exception as e:
+            print(f"Error creating walkable grid: {e}")
+        # Mark other agents' positions as non-walkable to avoid collisions
+        for agent in obs.sim_agents:
+            if agent.name != self.name and hasattr(agent, 'location'):
+                walkable_grid[agent.location] = False
+                #print(f"Marked agent {agent.name} at {agent.location} as non-walkable")
+
+        # Log walkable/non-walkable grid for debugging
+        # print("Walkable grid status for human:")
+        for y in range(grid_height):
+            row = ""
+            for x in range(grid_width):
+                if (x, y) in walkable_grid:
+                    row += "O" if walkable_grid[(x, y)] else "X"
+                else:
+                    row += "?"
+            # print(row)
+        return walkable_grid
+        
+    def shortest_path_length(self, walkable_grid, start, goal):
+        """Find the length of the shortest path from start to goal using BFS."""
+        from collections import deque
+
+        # If start or goal are not walkable, return infinity
+        if not walkable_grid.get(start, False) or not walkable_grid.get(goal, False):
+            return float('inf')
+
+        # BFS for shortest path
+        queue = deque([(start, 0)])  # (position, distance)
+        visited = {start}
+
+        # Four possible movement directions: up, right, down, left
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+
+        while queue:
+            pos, distance = queue.popleft()
+
+            if pos == goal:
+                return distance
+
+            # Try all four directions
+            for dx, dy in directions:
+                next_pos = (pos[0] + dx, pos[1] + dy)
+
+                # Check if the new position is valid and walkable
+                if (next_pos not in visited and 
+                    walkable_grid.get(next_pos, False)):
+
+                    visited.add(next_pos)
+                    queue.append((next_pos, distance + 1))
+
+        # If no path is found
+        return float('inf')
+       
+    def get_next_step_in_path(self, walkable_grid, start, goal):
+        """Find the next step in the shortest path from start to goal with zig-zag movement preference."""
+        from collections import deque
+        import random
+
+        # If we're already at the goal, return None
+        if start == goal:
+            return None
+
+        # If start or goal are not walkable, return None
+        if not walkable_grid.get(start, False) or not walkable_grid.get(goal, False):
+            return None
+
+        # Four possible movement directions: up, right, down, left
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+
+        # Find all possible next steps and their path lengths to the goal
+        candidate_steps = []
+        for dx, dy in directions:
+            next_pos = (start[0] + dx, start[1] + dy)
+
+            # Check if the new position is valid and walkable
+            if walkable_grid.get(next_pos, False):
+                # Use shortest_path_length to calculate the path length to goal
+                path_length = self.shortest_path_length(walkable_grid, next_pos, goal)
+
+                # Only consider positions that have a valid path to goal
+                if path_length != float('inf'):
+                    # Determine if this is a horizontal or vertical move
+                    move_type = 'horizontal' if dx != 0 else 'vertical'
+                    candidate_steps.append((next_pos, path_length, move_type))
+    
+        # If we have candidate steps with valid paths
+        if candidate_steps:
+            # Find the minimum path length among candidates
+            min_path_length = min(length for _, length, _ in candidate_steps)
+
+            # Filter to only include steps that have this minimum path length
+            best_next_steps = [(pos, move_type) for pos, length, move_type in candidate_steps if length == min_path_length]
+            
+            # print(best_next_steps)
+
+            # If multiple best next steps exist (same shortest path length), use zig-zag preference
+            if len(best_next_steps) > 1:
+                # Initialize last_move_type if it doesn't exist
+                if not hasattr(self, 'last_move_type'):
+                    self.last_move_type = 'none'
+
+                # Prefer the opposite direction of the last move for zig-zag pattern
+                preferred_move_type = 'horizontal' if self.last_move_type == 'vertical' else 'vertical'
+
+                # Filter steps that match our preferred move type
+                preferred_steps = [pos for pos, move_type in best_next_steps if move_type == preferred_move_type]
+
+                if preferred_steps:
+                    # Update the last move type for next time
+                    self.last_move_type = preferred_move_type
+                    return random.choice(preferred_steps)
+
+            # If no zig-zag preference applied or only one best step, choose randomly from best
+            chosen_step, move_type = random.choice(best_next_steps)
+            # Update the last move type for next time
+            self.last_move_type = move_type
+            return chosen_step
+
+    def navigate_to(self, target_location, obs):
+        """
+        Simple navigation to move toward a target location.
+        Tries to alternate between horizontal and vertical movement
+        and checks if the next position is walkable.
+        """
+        dx = target_location[0] - self.location[0]
+        dy = target_location[1] - self.location[1]
+
+        # If we're already at the target, don't move
+        if dx == 0 and dy == 0:
+            return (0, 0)
+
+        # Initialize last_nav_type if it doesn't exist yet
+        if not hasattr(self, 'last_nav_type'):
+            self.last_nav_type = 'none'
+
+        walkable_grid = self.get_walkable_grid(obs)
+
+        # Determine possible moves (horizontal and vertical)
+        h_move = (1 if dx > 0 else -1, 0) if dx != 0 else None
+        v_move = (0, 1 if dy > 0 else -1) if dy != 0 else None
+
+        # Determine which move would be preferred for alternating
+        preferred_type = 'horizontal' if self.last_nav_type != 'horizontal' and h_move else 'vertical'
+        preferred_move = h_move if preferred_type == 'horizontal' else v_move
+        alternate_move = v_move if preferred_type == 'horizontal' else h_move
+
+        # Helper function to check if a move is walkable
+        def is_walkable(move):
+            if not move or not walkable_grid:
+                return True  # Assume walkable if we can't check
+
+            next_pos = (self.location[0] + move[0], self.location[1] + move[1])
+            return walkable_grid.get(next_pos, False)
+
+        # Try preferred move first (for alternating behavior)
+        if preferred_move and is_walkable(preferred_move):
+            self.last_nav_type = 'horizontal' if preferred_move[0] != 0 else 'vertical'
+            return preferred_move
+
+        # Then try alternate move
+        if alternate_move and is_walkable(alternate_move):
+            self.last_nav_type = 'horizontal' if alternate_move[0] != 0 else 'vertical'
+            return alternate_move
+
+        # If no walkable direction is found, stay in place
+        return (0, 0)
+    
+    def manhattan_distance(self, pos1, pos2):
+        """Calculate Manhattan distance between two positions."""
+        if pos1 is None or pos2 is None:
+            return 14
+        return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+    
+    def is_adjacent(self, pos1, pos2):
+        """Check if two positions are adjacent."""
+        return self.manhattan_distance(pos1, pos2) == 1
+    
+    def get_direction_to(self, from_pos, to_pos):
+        """Get the direction to move from from_pos to to_pos."""
+        dx = to_pos[0] - from_pos[0]
+        dy = to_pos[1] - from_pos[1]
+        
+        if abs(dx) > abs(dy):
+            return (1 if dx > 0 else -1, 0) if dx != 0 else (0, 0)
+        else:
+            return (0, 1 if dy > 0 else -1) if dy != 0 else (0, 0)
+    
+    # Required methods for compatibility with environment metrics
+    def refresh_subtasks(self, world):
+        """Compatibility method for metrics tracking."""
+        if self.mode == "REAL_AGENT" and self.real_agent is not None:
+            self.real_agent.refresh_subtasks(world)
+    
+    def get_action_location(self):
+        """Return location if agent takes its action."""
+        import numpy as np
+        if self.mode == "REAL_AGENT" and self.real_agent is not None:
+            return self.real_agent.get_action_location()
+        return tuple(np.asarray(self.location) + np.asarray(self.action))
+    
+    def all_done(self):
+        """Return whether this agent is done with all tasks."""
+        if self.mode == "REAL_AGENT" and self.real_agent is not None:
+            return self.real_agent.all_done()
+        return False
+            
+
+## Simple chef
+class SimpleAgent:
+    """
+    A hybrid agent that starts with simple fetching behavior but converts to a RealAgent
+    when the FetchingAgent in the environment moves.
+    """
+    def initialize_mock_delegator(self):
+        """Initialize a mock delegator for metrics tracking in SIMPLE mode."""
+        class MockDelegator:
+            def __init__(self, agent_name):
+                self.probs = self
+                self.agent_name = agent_name
+                
+            def get_list(self):
+                return []  # No probabilities to report
+                
+            def select_subtask(self, agent_name):
+                return None, []
+                
+            def should_reset_priors(self, obs, incomplete_subtasks):
+                return False
+                
+            def set_priors(self, obs, incomplete_subtasks, priors_type):
+                pass
+                
+            def bayes_update(self, obs_tm1, actions_tm1, beta):
+                pass
+                
+            def get_other_agent_planners(self, obs, backup_subtask):
+                return {}
+                
+        self.delegator = MockDelegator(self.name)
+        
+    def sync_attributes_from_real_agent(self):
+        """Copy metrics tracking attributes from real_agent to this agent."""
+        if self.real_agent is None:
+            return
+            
+        # Copy all relevant attributes for metrics tracking
+        self.subtask = self.real_agent.subtask
+        self.new_subtask = self.real_agent.new_subtask
+        self.subtask_agent_names = self.real_agent.subtask_agent_names
+        self.new_subtask_agent_names = self.real_agent.new_subtask_agent_names
+        self.incomplete_subtasks = self.real_agent.incomplete_subtasks
+        self.subtask_complete = getattr(self.real_agent, 'subtask_complete', False)
+        self.is_subtask_complete = self.real_agent.is_subtask_complete
+        self.delegator = self.real_agent.delegator
+
+    def __init__(self, arglist, name, id_color, recipes):
+        self.arglist = arglist
+        self.name = name
+        self.color = id_color
+        self.recipes = recipes
+        self.location = None
+        self.holding = None
+        self.action = (0, 0)
+        
+        # Initial state as a simplified agent
+        self.mode = "SIMPLE"
+        self.target_item = None
+        self.real_agent = None
+        self.fetching_agent_prev_location = None
+        
+        # Metrics tracking attributes
+        self.subtask = None
+        self.new_subtask = None
+        self.subtask_agent_names = []
+        self.new_subtask_agent_names = []
+        self.incomplete_subtasks = []
+        self.subtask_complete = False
+        self.is_subtask_complete = lambda w: False
+        self.delegator = None
+        
+        # Initialize target item based on recipes
+        self.determine_target_item()
+        
+        # print(f"{self.name} initialized in SIMPLE mode, targeting: {self.target_item}")
+
+    def __str__(self):
+        return color(self.name[-1], self.color)
+
+    def determine_target_item(self):
+        """Determine initial target item (sushi or water) based on recipe."""
+        try:
+            # Check if recipes contain specific ingredients
+            recipe_str = str(self.recipes).lower()
+            if "sushi" in recipe_str:
+                self.target_item = "Sushi"
+            elif "water" in recipe_str:
+                self.target_item = "Water"
+            elif "egg" in recipe_str:
+                self.target_item = "Egg"  
+            elif "bread" in recipe_str:
+                self.target_item = "Bread"
+            else:
+                # Default to Sushi if unable to determine
+                self.target_item = "Sushi"
+                
+            # print(f"Recipe analysis: {recipe_str} -> Target: {self.target_item}")
+        except Exception as e:
+            # print(f"Error determining target item: {e}")
+            self.target_item = "Sushi"  # Default fallback
+
+    def select_action(self, obs):
+        """Return best next action for this agent based on current mode."""
+        # Get agent representation from simulation
+        sim_agent = next((a for a in obs.sim_agents if a.name == self.name), None)
+       
+        if not sim_agent:
+            return (0, 0)
+
+        # Check if holding state changed (for transition detection)
+        previous_holding = self.holding
+
+        # Update agent state
+        self.location = sim_agent.location
+        self.holding = sim_agent.holding
+        self.action = sim_agent.action
+
+        # print(previous_holding)
+        # print(self.holding)
+
+        # Initialize delegator if needed for metrics tracking
+        if self.delegator is None:
+            self.initialize_mock_delegator()
+
+        # Find the other agent (assume it's the fetching agent)
+        fetching_agent = next((a for a in obs.sim_agents if a.name != self.name), None)
+
+        
+        
+
+        # Check if we should switch to RealAgent mode based on multiple conditions
+        if self.mode == "SIMPLE":
+            # Condition 2: The other agent moved (original condition)
+            if fetching_agent is not None:
+                # Store the other agent's location if this is the first observation
+                if self.fetching_agent_prev_location is None:
+                    self.fetching_agent_prev_location = fetching_agent.location
+        return self.simple_mode_action(obs)
+        
     def simple_mode_action(self, obs):
         """Determine action in SIMPLE mode - go for target item."""
         # If already holding the target, just stay in place

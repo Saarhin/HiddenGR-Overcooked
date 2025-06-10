@@ -2,7 +2,7 @@
 # from gym_cooking.envs import OvercookedEnvironment
 from recipe_planner.recipe import *
 from utils.world import World
-from utils.agent import RealAgent, SimAgent, COLORS, FetchingAgent, HybridAgent
+from utils.agent import RealAgent, SimAgent, COLORS, FetchingAgent, HybridAgent, SimpleAgent
 from utils.core import *
 from misc.game.gameplay import GamePlay
 from misc.metrics.metrics_bag import Bag
@@ -78,6 +78,7 @@ def parse_arguments():
     parser.add_argument("--belief-experiments", action="store_true", default=False, help="Run belief agent")
     parser.add_argument("--dqn-input", type=str, default="Summary",
                         help="What type of input does the fetcher get? Full, Summary, Summary+belief(distance), Summary+belief(GVFs)")
+    parser.add_argument("--chef-test", action="store_true", default=False, help="Thest the chef performance in fron of a human player")
 
 
     return parser.parse_args()
@@ -218,6 +219,43 @@ def initialize_agents_bl(arglist):
 
     return real_agents
 
+def initialize_agents_test(arglist):
+    real_agents = []
+
+    with open('utils/levels/{}.txt'.format(arglist.level), 'r') as f:
+        phase = 1
+        recipes = []
+        for line in f:
+            line = line.strip('\n')
+            if line == '':
+                phase += 1
+
+            # phase 2: read in recipe list
+            elif phase == 2:
+                recipes.append(globals()[line]())
+
+            # phase 3: read in agent locations (up to num_agents)
+            elif phase == 3:
+
+                simple_agent = SimpleAgent(
+                    arglist=arglist,
+                    name='agent-'+str(len(real_agents)+1),
+                    id_color=COLORS[len(real_agents)],
+                    recipes=recipes) 
+                
+                real_agents.append(simple_agent)  
+
+                simple_agent = SimpleAgent(
+                    arglist=arglist,
+                    name='agent-'+str(len(real_agents)+1),
+                    id_color=COLORS[len(real_agents)],
+                    recipes=recipes) 
+                
+                real_agents.append(simple_agent)
+
+                return real_agents
+
+
 
 def main_loop(arglist):
     """The main loop for running experiments."""
@@ -331,6 +369,15 @@ if __name__ == '__main__':
         env.reset()
         game = GamePlay(env.filename, env.world, env.sim_agents)
         game.on_execute()
+
+    elif arglist.chef_test:
+        agents = initialize_agents_test(arglist)
+        print(agents)
+        env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=arglist)
+        state = env.reset()
+        game = GamePlay(env.filename, env.world, env.sim_agents, agents=agents, env = env, state=state)
+        game.on_execute()
+
     else:
         #print("Running regular Overcooked experiment")
         model_types = [arglist.model1, arglist.model2, arglist.model3, arglist.model4]
@@ -338,5 +385,7 @@ if __name__ == '__main__':
             model_types))) == arglist.num_agents, "num_agents should match the number of models specified"
         fix_seed(seed=arglist.seed)
         main_loop(arglist=arglist)
+
+
 
 

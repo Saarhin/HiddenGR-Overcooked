@@ -148,7 +148,7 @@ class OvercookedEnvironment(gym.Env):
         self.world.perimeter = 2*(self.world.width + self.world.height)
 
 
-    def reset(self, target):
+    def reset(self, target="Water"):
         self.world = World(arglist=self.arglist)
         self.recipes = []
         self.sim_agents = []

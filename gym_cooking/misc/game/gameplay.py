@@ -15,7 +15,7 @@ from datetime import datetime
 
 
 class GamePlay(Game):
-    def __init__(self, filename, world, sim_agents):
+    def __init__(self, filename, world, sim_agents, agents=None, env=None, state=None):
         Game.__init__(self, world, sim_agents, play=True)
         self.filename = filename
         self.save_dir = 'misc/game/screenshots'
@@ -31,6 +31,9 @@ class GamePlay(Game):
                 self.gridsquare_types[name].add(gridsquare.location)
         
         self.sim_agents_store = sim_agents
+        self.agents = agents
+        self.env = env
+        self.state = state
 
 
     def on_event(self, event):
@@ -45,19 +48,47 @@ class GamePlay(Game):
                 return
             
             # Switch current agent
-            if pygame.key.name(event.key) in "1234":
-                try:
-                    self.current_agent = self.sim_agents[int(pygame.key.name(event.key))-1]
-                except:
-                    pass
-                return
+            if self.agents is None:
+                if pygame.key.name(event.key) in "1234":
+                    try:
+                        self.current_agent = self.sim_agents[int(pygame.key.name(event.key))-1]
+                    except:
+                        pass
+                    return
 
-            # Control current agent
-            x, y = self.current_agent.location
-            if event.key in KeyToTuple.keys():
-                action = KeyToTuple[event.key]
-                self.current_agent.action = action
-                interact(self.current_agent, self.world, self.sim_agents_store)
+                # Control current agent
+                x, y = self.current_agent.location
+                if event.key in KeyToTuple.keys():
+                    action = KeyToTuple[event.key]
+                    self.current_agent.action = action
+                    interact(self.current_agent, self.world, self.sim_agents_store)
+            else:
+                # Control current agent
+                action_dict={}
+                self.current_agent = self.sim_agents[0]
+                x, y = self.current_agent.location
+                if event.key in KeyToTuple.keys():
+                    action = KeyToTuple[event.key]
+                    self.current_agent.action = action
+
+                    action_dict[self.current_agent.name] = action
+                    
+                    
+                    self.current_agent = self.sim_agents[1]
+                    action = self.agents[1].select_action(self.state)
+                    self.current_agent.action = action
+
+
+                    action_dict[self.current_agent.name] = action
+
+                    
+                    # self.current_agent = self.sim_agents[0]
+                    # interact(self.current_agent, self.world, self.sim_agents_store)
+                    # self.current_agent = self.sim_agents[1]
+                    # interact(self.current_agent, self.world, self.sim_agents_store)
+
+                    self.state, _, _, _ = self.env.step(action_dict, self.agents[1].target_item)
+
 
     def on_execute(self):
         if self.on_init() == False:
