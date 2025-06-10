@@ -78,7 +78,6 @@ class GamePlay(Game):
                     action = self.agents[1].select_action(self.state)
                     self.current_agent.action = action
 
-
                     action_dict[self.current_agent.name] = action
 
                     

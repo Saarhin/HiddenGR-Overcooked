@@ -205,8 +205,12 @@ class OvercookedEnvironment(gym.Env):
         for sim_agent in self.sim_agents:
             sim_agent.action = action_dict[sim_agent.name]
 
+        print(self.sim_agents[0].action)
+        print(self.sim_agents[1].action)
         # Check collisions.
         self.check_collisions()
+        print(self.sim_agents[0].action)
+        print(self.sim_agents[1].action)
         self.obs_tm1 = copy.copy(self)
 
         # Execute.
@@ -422,10 +426,12 @@ class OvercookedEnvironment(gym.Env):
             
             # SPECIAL CASE: Allow moving toward another agent if a handoff is possible
             # (agent is holding something, other agent has empty hands)
+            
             if (agent_i.holding is not None and agent_j.holding is None and 
                 self.is_adjacent(agent_i.location, agent_j.location) and
                 agent_i.action == self.get_direction_to(agent_i.location, agent_j.location)):
                 # Skip collision detection to allow the handoff
+                agent_j.action = (0,0)
                 continue
 
             if (agent_j.holding is not None and agent_i.holding is None and 
@@ -455,7 +461,7 @@ class OvercookedEnvironment(gym.Env):
                         agent_locations=[agent_i.location, agent_j.location])
                 self.collisions.append(collision)
 
-        # print('\nexecute array is:', execute)
+            # print('\nexecute array is:', execute)
 
         # Update agents' actions if collision was detected.
         for i, agent in enumerate(self.sim_agents):

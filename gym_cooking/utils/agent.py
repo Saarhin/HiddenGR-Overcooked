@@ -861,48 +861,6 @@ class SimpleAgent:
     A hybrid agent that starts with simple fetching behavior but converts to a RealAgent
     when the FetchingAgent in the environment moves.
     """
-    def initialize_mock_delegator(self):
-        """Initialize a mock delegator for metrics tracking in SIMPLE mode."""
-        class MockDelegator:
-            def __init__(self, agent_name):
-                self.probs = self
-                self.agent_name = agent_name
-                
-            def get_list(self):
-                return []  # No probabilities to report
-                
-            def select_subtask(self, agent_name):
-                return None, []
-                
-            def should_reset_priors(self, obs, incomplete_subtasks):
-                return False
-                
-            def set_priors(self, obs, incomplete_subtasks, priors_type):
-                pass
-                
-            def bayes_update(self, obs_tm1, actions_tm1, beta):
-                pass
-                
-            def get_other_agent_planners(self, obs, backup_subtask):
-                return {}
-                
-        self.delegator = MockDelegator(self.name)
-        
-    def sync_attributes_from_real_agent(self):
-        """Copy metrics tracking attributes from real_agent to this agent."""
-        if self.real_agent is None:
-            return
-            
-        # Copy all relevant attributes for metrics tracking
-        self.subtask = self.real_agent.subtask
-        self.new_subtask = self.real_agent.new_subtask
-        self.subtask_agent_names = self.real_agent.subtask_agent_names
-        self.new_subtask_agent_names = self.real_agent.new_subtask_agent_names
-        self.incomplete_subtasks = self.real_agent.incomplete_subtasks
-        self.subtask_complete = getattr(self.real_agent, 'subtask_complete', False)
-        self.is_subtask_complete = self.real_agent.is_subtask_complete
-        self.delegator = self.real_agent.delegator
-
     def __init__(self, arglist, name, id_color, recipes):
         self.arglist = arglist
         self.name = name
@@ -974,18 +932,8 @@ class SimpleAgent:
         self.holding = sim_agent.holding
         self.action = sim_agent.action
 
-        # print(previous_holding)
-        # print(self.holding)
-
-        # Initialize delegator if needed for metrics tracking
-        if self.delegator is None:
-            self.initialize_mock_delegator()
-
         # Find the other agent (assume it's the fetching agent)
-        fetching_agent = next((a for a in obs.sim_agents if a.name != self.name), None)
-
-        
-        
+        fetching_agent = next((a for a in obs.sim_agents if a.name != self.name), None)        
 
         # Check if we should switch to RealAgent mode based on multiple conditions
         if self.mode == "SIMPLE":
@@ -994,14 +942,14 @@ class SimpleAgent:
                 # Store the other agent's location if this is the first observation
                 if self.fetching_agent_prev_location is None:
                     self.fetching_agent_prev_location = fetching_agent.location
-        return self.simple_mode_action(obs)
+        return self.simple_mode_action(obs, fetching_agent.location)
         
-    def simple_mode_action(self, obs):
+    def simple_mode_action(self, obs, fetching_agent_location):
         """Determine action in SIMPLE mode - go for target item."""
         # If already holding the target, just stay in place
         if self.holding is not None:
             # print(f"{self.name} already holding {self.get_holding()}, waiting for mode switch")
-            return (0, 0)
+            self.target_item = "Delivery"
 
         # Find locations of the target item
         target_locations = []
@@ -1016,6 +964,9 @@ class SimpleAgent:
                         if hasattr(obj, 'location') and obj.location:
                             target_locations.append(obj.location)
                             # print(f"Found {self.target_item} at {obj.location}")
+            target_locations.append(fetching_agent_location)
+
+
         except Exception as e:
             print(f"Error finding target locations: {e}")
 
@@ -1023,7 +974,7 @@ class SimpleAgent:
         walkable_grid = self.get_walkable_grid(obs)
 
         # Make sure target locations are walkable for pathfinding
-        for loc in target_locations:
+        for loc in target_locations[:1]:
             walkable_grid[loc] = True
 
         # Find best target and path
@@ -1031,7 +982,10 @@ class SimpleAgent:
         best_approach = None
         best_path_length = float('inf')
 
+
         for loc in target_locations:
+            if best_target:
+                break
             # If we can interact directly with the object
             if self.is_adjacent(self.location, loc):
                 best_target = loc
@@ -1047,6 +1001,7 @@ class SimpleAgent:
                         best_path_length = path_length
                         best_target = loc
                         best_approach = adjacent
+        print(best_target)
 
         # If no path found to any target, use basic navigation as fallback
         if best_target is None:

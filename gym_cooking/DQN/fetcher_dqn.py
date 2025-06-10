@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gym
 from gym import spaces
-from utils.agent import RealAgent, SimAgent, COLORS, FetchingAgent, HybridAgent, DQNFetchingAgent
+from utils.agent import RealAgent, SimAgent, COLORS, FetchingAgent, HybridAgent, DQNFetchingAgent, SimpleAgent
 from recipe_planner.recipe import *
 from tqdm import tqdm
 import re
@@ -100,7 +100,7 @@ class DQNTrainer:
                     if count == 1:
                         # MAKE AGENT 2 A "HUMAN"
                         # print(f'Initializing HybridAgent {len(real_agents)+1} at location ({loc[0]}, {loc[1]})')
-                        real_agent = HybridAgent(
+                        real_agent = SimpleAgent(
                             arglist=self.arglist,
                             name='agent-'+str(len(real_agents)+1),
                             id_color=COLORS[len(real_agents)],
