@@ -25,7 +25,7 @@ import torch
 from gym import spaces
 import re
 
-AgentRepr = namedtuple("AgentRepr", "name location holding")
+AgentRepr = namedtuple("AgentRepr", "name location holding previous_holing")
 
 # Colors for agents.
 COLORS = ['blue', 'magenta', 'yellow', 'green']
@@ -273,6 +273,7 @@ class SimAgent:
         self.holding = None
         self.action = (0, 0)
         self.has_delivered = False
+        self.previous_holding = None
 
     def __str__(self):
         return color(self.name[-1], self.color)
@@ -283,22 +284,30 @@ class SimAgent:
         a.__dict__ = self.__dict__.copy()
         if self.holding is not None:
             a.holding = copy.copy(self.holding)
+        if self.previous_holding is not None:
+            a.previous_holding = copy.copy(self.previous_holding)
         return a
 
     def get_repr(self):
-        return AgentRepr(name=self.name, location=self.location, holding=self.get_holding())
+        return AgentRepr(name=self.name, location=self.location, holding=self.get_holding(), previous_holding=self.get_previous_holding())
 
     def get_holding(self):
         if self.holding is None:
             return 'None'
         return self.holding.full_name
+    
+    def get_previous_holding(self):
+        if self.previous_holding is None:
+            return 'None'
+        return self.previous_holding.full_name
 
     def print_status(self):
-        print("{} currently at {}, action {}, holding {}".format(
+        print("{} currently at {}, action {}, holding {}, previously holding {}".format(
                 color(self.name, self.color),
                 self.location,
                 self.action,
-                self.get_holding()))
+                self.get_holding(),
+                self.get_previous_holding()))
 
     def acquire(self, obj):
         if self.holding is None:
@@ -875,6 +884,7 @@ class SimpleAgent:
         self.target_item = None
         self.real_agent = None
         self.fetching_agent_prev_location = None
+        self.previous_holding = None
         
         # Metrics tracking attributes
         self.subtask = None
@@ -924,13 +934,15 @@ class SimpleAgent:
         if not sim_agent:
             return (0, 0)
 
-        # Check if holding state changed (for transition detection)
-        previous_holding = self.holding
 
         # Update agent state
         self.location = sim_agent.location
         self.holding = sim_agent.holding
         self.action = sim_agent.action
+        self.previous_holding = sim_agent.previous_holding
+
+        print(self.holding)
+        print(self.previous_holding)
 
         # Find the other agent (assume it's the fetching agent)
         fetching_agent = next((a for a in obs.sim_agents if a.name != self.name), None)        
@@ -1027,7 +1039,7 @@ class SimpleAgent:
         if self.holding is None:
             return 'None'
         return self.holding.full_name
-    
+     
     def get_walkable_grid(self, obs):
         """Create a grid representing walkable areas, avoiding counters, obstacles, and other agents.
         Returns:
@@ -1315,6 +1327,7 @@ class FetchingAgent:
         self.delivery_complete = False  # Flag to track if delivery has been made
         self.returning_home = False  # Flag to track if agent is returning home
         self.previous_distances = None  # Initialize distances tracker
+        self.previous_holding = None
 
         # Store arglist for planner initialization
         self.arglist = arglist
@@ -1366,6 +1379,7 @@ class FetchingAgent:
     
     def select_action(self, obs):
         """Determine the next action based on the current state and observation."""
+        self.previous_holding = self.holding
         # Update agent's state from the simulation
         sim_agent = next((a for a in obs.sim_agents if a.name == self.name), None)
         if not sim_agent:
@@ -2272,6 +2286,7 @@ class DQNFetchingAgent:
         self.new_subtask = None
         self.new_subtask_agent_names = []
         self.subtask_complete = False
+        self.previous_holding = None
 
         # Define a no-op is_subtask_complete function for compatibility
         self.is_subtask_complete = lambda w: False
@@ -2313,12 +2328,15 @@ class DQNFetchingAgent:
         return self.holding.full_name
      
     def select_action(self, obs,env, epsilon, policy, dqn_input, is_empty=False):
+
+        self.previous_holding = self.holding
     
         sim_agent = next((a for a in obs.sim_agents if a.name == self.name), None)
         # Update internal state from SimAgent
         self.location = sim_agent.location
         self.holding = sim_agent.holding
         self.action = sim_agent.action
+        
             
 
         if random.random() < epsilon:

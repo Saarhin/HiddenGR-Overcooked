@@ -86,7 +86,10 @@ class GamePlay(Game):
                     # self.current_agent = self.sim_agents[1]
                     # interact(self.current_agent, self.world, self.sim_agents_store)
 
-                    self.state, _, _, _ = self.env.step(action_dict, self.agents[1].target_item)
+                    self.state, reward, _, _ = self.env.step(action_dict, self.agents[1].target_item)
+                    
+                    self.agents[1].refresh_subtasks(world=self.env.world)
+                    print(f"step reward: {reward}")
 
 
     def on_execute(self):

@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import outset as otst
 
-input_file = "./policies_Summary_seed2/rewards.csv"
+input_file = "./policies_Summary_seed3/rewards.csv"
 
 file = pd.read_csv(input_file)
 file_array = np.array(file)

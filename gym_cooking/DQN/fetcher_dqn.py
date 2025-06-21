@@ -71,10 +71,10 @@ class DQNTrainer:
         self.y = 0
         self.realAgents = None
         self.arglist = arglist
-        folder_name = f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}"
+        self.folder_name = f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}_fetcherDQN_simpleChef"
 
-        if not os.path.exists(folder_name):
-            os.mkdir(folder_name)
+        if not os.path.exists(self.folder_name):
+            os.mkdir(self.folder_name)
        
 
     def initialize_agents(self):
@@ -170,6 +170,7 @@ class DQNTrainer:
                 new_state, reward, terminated, _ = self.env.step(action_dict, target)
 
                 sum_reward += reward
+                print(f"step reward: {reward}")
 
                 self.memory.append((state, action_save, new_state, reward, terminated))
                 for agent in self.realAgents:
@@ -196,12 +197,18 @@ class DQNTrainer:
                     self.target_DQN.load_state_dict(self.policy_DQN.state_dict())
                     step_count=0
 
-            torch.save(self.policy_DQN.state_dict(), f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}/fetcher_dqn{i}.pt")
+            if i%2 == 0:
+                torch.save(self.policy_DQN.state_dict(), f"{self.folder_name}/fetcher_dqn{i}.pt")
+                with open(f"{self.folder_name}/rewards_{i}.csv", "w", newline='') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(["episode", "reward"])  # optional header
+                    for i, reward in enumerate(reward_per_episode):
+                        writer.writerow([i, reward])
             
 
         self.env.close()
 
-        with open(f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}/rewards.csv", "w", newline='') as f:
+        with open(f"{self.folder_name}/rewards.csv", "w", newline='') as f:
             writer = csv.writer(f)
             writer.writerow(["episode", "reward"])  # optional header
             for i, reward in enumerate(reward_per_episode):

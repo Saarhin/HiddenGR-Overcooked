@@ -7,7 +7,8 @@ def interact(agent, world, sim_agents):
 
     The action that needs to be executed is stored in `agent.action`.
     """
-
+    
+    agent.previous_holding = agent.holding
     # agent does nothing (i.e. no arrow key)
     if agent.action == (0, 0):
         return

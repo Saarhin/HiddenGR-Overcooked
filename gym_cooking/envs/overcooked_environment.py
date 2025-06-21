@@ -46,6 +46,9 @@ class OvercookedEnvironment(gym.Env):
         self.collisions = []
         self.termination_info = ""
         self.successful = False
+        self.handoff = False
+        self.item_grabbed = False
+        self.item_handoff = False
 
     def get_repr(self):
         return self.world.get_repr() + tuple([agent.get_repr() for agent in self.sim_agents])
@@ -67,6 +70,7 @@ class OvercookedEnvironment(gym.Env):
 
         # Make sure new objects and new agents' holdings have the right pointers.
         for a in new_env.sim_agents:
+            a.previous_holding = a.holding
             if a.holding is not None:
                 a.holding = new_env.world.get_object_at(
                         location=a.location,
@@ -154,6 +158,8 @@ class OvercookedEnvironment(gym.Env):
         self.sim_agents = []
         self.agent_actions = {}
         self.t = 0
+        self.item_grabbed = False
+        self.item_handoff = False
 
         # For visualizing episode.
         self.rep = []
@@ -205,12 +211,8 @@ class OvercookedEnvironment(gym.Env):
         for sim_agent in self.sim_agents:
             sim_agent.action = action_dict[sim_agent.name]
 
-        print(self.sim_agents[0].action)
-        print(self.sim_agents[1].action)
         # Check collisions.
         self.check_collisions()
-        print(self.sim_agents[0].action)
-        print(self.sim_agents[1].action)
         self.obs_tm1 = copy.copy(self)
 
         # Execute.
@@ -228,7 +230,7 @@ class OvercookedEnvironment(gym.Env):
         image_obs = self.game.get_image_obs()
 
         done = self.done(target)
-        reward = self.reward()
+        reward = self.reward(target)
         info = {"t": self.t, "obs": new_obs,
                 "image_obs": image_obs,
                 "done": done, "termination_info": self.termination_info}
@@ -242,6 +244,7 @@ class OvercookedEnvironment(gym.Env):
                     self.arglist.max_num_timesteps)
             self.successful = False
             return True
+        print(self.successful)
 
         assert any([isinstance(subtask, recipe.Deliver) for subtask in self.all_subtasks]), "no delivery subtask"
 
@@ -250,8 +253,6 @@ class OvercookedEnvironment(gym.Env):
             if target in str(subtask):
                 # Double check all goal_objs are at Delivery.
                 if isinstance(subtask, recipe.Deliver):
-                    # print("vcvcvcvcvcvcvcvcvcvcvcvcvcvcvcvcv")
-                    # print(subtask)
                     _, goal_obj = nav_utils.get_subtask_obj(subtask)
                     # print(goal_obj)
 
@@ -266,7 +267,26 @@ class OvercookedEnvironment(gym.Env):
         self.successful = True
         return True
 
-    def reward(self):
+    def reward(self, target = "Water"):
+        if (self.sim_agents[0].get_previous_holding() == 'None' 
+        and self.sim_agents[0].get_holding() != 'None'
+        and target in self.sim_agents[0].get_holding() 
+        and not self.item_grabbed):
+            
+            self.item_grabbed = True
+            return 5
+        
+        if (self.sim_agents[0].get_previous_holding() != 'None'
+            and self.sim_agents[0].get_holding() == 'None'
+             and target in self.sim_agents[0].get_previous_holding()
+              and self.sim_agents[1].get_previous_holding() == 'None' 
+               and self.sim_agents[1].get_holding() != 'None'
+                and target in self.sim_agents[1].get_holding()
+                 and not self.item_handoff ):
+            self.item_handoff = True
+            return 10
+        
+      
         return 1 if self.successful else -1
 
     def print_agents(self):
@@ -419,6 +439,7 @@ class OvercookedEnvironment(gym.Env):
 
         Collisions can either happen amongst agents or between agents and world objects."""
         execute = [True for _ in self.sim_agents]
+        self.handoff = False
 
         # Check each pairwise collision between agents.
         for i, j in combinations(range(len(self.sim_agents)), 2):
@@ -432,6 +453,7 @@ class OvercookedEnvironment(gym.Env):
                 agent_i.action == self.get_direction_to(agent_i.location, agent_j.location)):
                 # Skip collision detection to allow the handoff
                 agent_j.action = (0,0)
+                self.handoff = True
                 continue
 
             if (agent_j.holding is not None and agent_i.holding is None and 
@@ -488,6 +510,8 @@ class OvercookedEnvironment(gym.Env):
         for agent in self.sim_agents:
             interact(agent=agent, world=self.world, sim_agents=self.sim_agents)
             self.agent_actions[agent.name] = agent.action
+        if self.handoff:
+            self.sim_agents[1].previous_holding = None
 
 
     def cache_distances(self):
