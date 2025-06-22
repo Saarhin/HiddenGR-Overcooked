@@ -167,7 +167,7 @@ class DQNTrainer:
                     action_dict[agent.name] = action
                 print(action_dict)
 
-                new_state, reward, terminated, _ = self.env.step(action_dict, target)
+                new_state, reward, terminated, _ = self.env.step(action_dict=action_dict, target=target)
 
                 sum_reward += reward
                 print(f"step reward: {reward}")
@@ -403,7 +403,7 @@ class DQNTrainer:
                     action = agent.select_action(obs=state)
                 action_dict[agent.name] = action
 
-            state, reward, terminated, info = self.env.step(action_dict, target)
+            state, reward, terminated, info = self.env.step(action_dict = action_dict, target = target)
            
 
             for agent in self.realAgents:
