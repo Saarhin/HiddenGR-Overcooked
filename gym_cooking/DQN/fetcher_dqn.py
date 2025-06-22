@@ -197,7 +197,7 @@ class DQNTrainer:
                     self.target_DQN.load_state_dict(self.policy_DQN.state_dict())
                     step_count=0
 
-            if i%2 == 0:
+            if i%200 == 0:
                 torch.save(self.policy_DQN.state_dict(), f"{self.folder_name}/fetcher_dqn{i}.pt")
                 with open(f"{self.folder_name}/rewards_{i}.csv", "w", newline='') as f:
                     writer = csv.writer(f)
