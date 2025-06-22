@@ -146,7 +146,7 @@ class DQNTrainer:
                     if agent.name == 'agent-2':
                         agent.target_item = target
             print(target)
-            state = self.env.reset(target)
+            state = self.env.reset(target = target)
 
 
             while(not terminated and not truncated):
