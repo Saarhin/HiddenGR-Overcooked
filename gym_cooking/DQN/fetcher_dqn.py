@@ -60,11 +60,11 @@ class DQNTrainer:
 
         self.memory = ReplayMemory(10000)
         self.batch_size = 32
-        self.discount_factor = 0.95
+        self.discount_factor = 0.99
         self.epsilon = 1.0
         self.epsilon_decay = 0.995
-        self.min_epsilon = 0.05
-        self.target_update_freq = 20
+        self.min_epsilon = 0.2
+        self.target_update_freq = 200
         self.step_counter = 0
         self.epsilon_history = []
         self.x = 0
