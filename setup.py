@@ -14,7 +14,7 @@ setup(
         'future>=0.18.2',
         #'gymnasium>=0.29.0',
         'gym==0.17.2',
-        'matplotlib>=3.3.2',
+        'matplotlib',
         'networkx>=2.5',
         'numpy>=1.19.2',
         'pandas>=1.1.2',
@@ -28,8 +28,8 @@ setup(
         'seaborn>=0.11.0',
         'six>=1.15.0',
         'termcolor>=1.1.0',
-        'tqdm>=4.50.1',
-        'torch==2.7.0'
+        'tqdm',
+        'torch'
 
     ]
 )

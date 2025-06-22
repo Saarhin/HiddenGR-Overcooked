@@ -12,7 +12,7 @@
 
 module load python/3.10
 
-source marl/bin/activate
+source /home/saarhin/scratch/HiddenGR-Overcooked/marl/bin/activate
 
 export PYTHONPATH="${PYTHONPATH}:/home/scratch/saarhin/HiddenGR-Overcooked"
 
