@@ -158,7 +158,7 @@ class OvercookedGRExperiment:
         #print("Setting up experiment environment...")
         
         # Initialize environment - ensure record flag is passed correctly
-        self.env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=self.arglist)
+        self.env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=self.arglist, disable_env_checker=True)
         
         # Verify record setting is properly applied
         if self.arglist.record:
