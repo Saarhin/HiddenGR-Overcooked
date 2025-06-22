@@ -200,7 +200,8 @@ class OvercookedEnvironment(gym.Env):
     def close(self):
         return
 
-    def step(self, action_dict, target):
+    def step(self, action): 
+        action_dict, target = action
         # Track internal environment info.
         self.t += 1
         # print("===============================")
