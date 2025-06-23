@@ -14,6 +14,7 @@ import re
 from misc.metrics.metrics_bag import Bag
 import os
 import csv
+import psutil, os
 
 class DQN(nn.Module):
     def __init__(self, in_states, h1_nodes, out_actions):
@@ -197,7 +198,12 @@ class DQNTrainer:
                     self.target_DQN.load_state_dict(self.policy_DQN.state_dict())
                     step_count=0
 
-            if i%200 == 0:
+            # if i%5 == 0:
+            #     proc = psutil.Process(os.getpid())
+            #     rss = proc.memory_info().rss / 1024 ** 2  # in MB
+            #     print(f"RAM usage: {rss:.2f} MB")
+
+            if i%1000 == 0:
                 torch.save(self.policy_DQN.state_dict(), f"{self.folder_name}/fetcher_dqn{i}.pt")
                 with open(f"{self.folder_name}/rewards_{i}.csv", "w", newline='') as f:
                     writer = csv.writer(f)
