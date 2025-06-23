@@ -14,7 +14,7 @@ import re
 from misc.metrics.metrics_bag import Bag
 import os
 import csv
-import psutil, os
+#import psutil, os
 
 class DQN(nn.Module):
     def __init__(self, in_states, h1_nodes, out_actions):
