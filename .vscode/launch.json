@@ -23,7 +23,7 @@
                 "--num-agents", "2",
                 "--level", "SarahDesignOne",
                 "--record",
-                "--chef-test"
+                "--belief-experiment"
             ]
         }
     ]

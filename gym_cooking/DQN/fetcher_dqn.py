@@ -15,6 +15,9 @@ from misc.metrics.metrics_bag import Bag
 import os
 import csv
 #import psutil, os
+import time
+import cProfile
+import pstats
 
 class DQN(nn.Module):
     def __init__(self, in_states, h1_nodes, out_actions):
@@ -65,7 +68,7 @@ class DQNTrainer:
         self.epsilon = 1.0
         self.epsilon_decay = 0.995
         self.min_epsilon = 0.2
-        self.target_update_freq = 200
+        self.target_update_freq = 100
         self.step_counter = 0
         self.epsilon_history = []
         self.x = 0
@@ -126,99 +129,101 @@ class DQNTrainer:
 
     def train(self):
 
-        
+        with cProfile.Profile() as profile:
 
-        # might need to hardcode these
-        num_states = self.state_dim
-        num_actions = self.action_dim
-        reward_per_episode = np.zeros(self.episodes)
+            # might need to hardcode these
+            num_states = self.state_dim
+            num_actions = self.action_dim
+            reward_per_episode = np.zeros(self.episodes)
 
-        step_count = 0
+            step_count = 0
 
-        for i in tqdm(range(self.episodes)):
-            self.realAgents, self.x, self.y=self.initialize_agents()
-            
-            terminated = False
-            truncated = False
-            sum_reward = 0
+            for i in tqdm(range(self.episodes)):
+                self.realAgents, self.x, self.y=self.initialize_agents()
+                
+                terminated = False
+                truncated = False
+                sum_reward = 0
 
-            target = "Water" if random.random()<0.5 else "Sushi"
-            for agent in self.realAgents:
-                    if agent.name == 'agent-2':
-                        agent.target_item = target
-            print(target)
-            state = self.env.reset(target = target)
-
-
-            while(not terminated and not truncated):
-                action_dict = {}
-
+                target = "Water" if random.random()<0.5 else "Sushi"
                 for agent in self.realAgents:
-                    if agent.name == 'agent-1':
-                        if self.arglist.dqn_input == "Full":
-                            dqn_input, is_empty = self.state_to_dqn_input(self.env.rep)
-                        elif self.arglist.dqn_input == "Summary":
-                            dqn_input = self.get_agent_specific_state(state)
-                            is_empty = False
-                        action, action_save = agent.select_action(obs=state,env=self.env, epsilon=self.epsilon, policy=self.policy_DQN, dqn_input=dqn_input, is_empty=is_empty)
-                    else:
-                        action = agent.select_action(obs=state)
-                        if action is None:
-                            action = (0, 0)
-                    action_dict[agent.name] = action
-                print(action_dict)
+                        if agent.name == 'agent-2':
+                            agent.target_item = target
+                state = self.env.reset(target = target)
 
-                new_state, reward, terminated, _ = self.env.step((action_dict, target))
 
-                sum_reward += reward
-                print(f"step reward: {reward}")
+                while(not terminated and not truncated):
+                    action_dict = {}
 
-                self.memory.append((state, action_save, new_state, reward, terminated))
-                for agent in self.realAgents:
-                    # Only RealAgent needs to refresh subtasks
-                    if not isinstance(agent, DQNFetchingAgent):
-                        agent.refresh_subtasks(world=self.env.world)
+                    for agent in self.realAgents:
+                        if agent.name == 'agent-1':
+                            if self.arglist.dqn_input == "Full":
+                                dqn_input, is_empty = self.state_to_dqn_input(self.env.rep)
+                            elif self.arglist.dqn_input == "Summary":
+                                dqn_input = self.get_agent_specific_state(state)
+                                is_empty = False
+                            action, action_save = agent.select_action(obs=state,env=self.env, epsilon=self.epsilon, policy=self.policy_DQN, dqn_input=dqn_input, is_empty=is_empty)
+                        else:
+                            action = agent.select_action(obs=state)
+                            if action is None:
+                                action = (0, 0)
+                        action_dict[agent.name] = action
+                        
 
-                state = new_state
+                    new_state, reward, terminated, _ = self.env.step((action_dict, target))
 
-                step_count += 1
+                    sum_reward += reward
 
-            reward_per_episode[i] = sum_reward
-            print(sum_reward)
+                    self.memory.append((state, action_save, new_state, reward, terminated))
+                    for agent in self.realAgents:
+                        # Only RealAgent needs to refresh subtasks
+                        if not isinstance(agent, DQNFetchingAgent):
+                            agent.refresh_subtasks(world=self.env.world)
 
-            if len(self.memory)>self.batch_size and np.sum(reward_per_episode)>0:
-                mini_batch = self.memory.sample(self.batch_size)
-                self.optimize(mini_batch, self.policy_DQN, self.target_DQN)
+                    state = new_state
+
+                    step_count += 1
+
+                reward_per_episode[i] = sum_reward
+                
+                if len(self.memory)>self.batch_size:
+                    mini_batch = self.memory.sample(self.batch_size)
+                    self.optimize(mini_batch, self.policy_DQN, self.target_DQN)
+                    
+
+                    self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
+                    self.epsilon_history.append(self.epsilon)
+
+                    if step_count > self.target_update_freq :
+                        self.target_DQN.load_state_dict(self.policy_DQN.state_dict())
+                        step_count=0
+
+                # if i%5 == 0:
+                #     proc = psutil.Process(os.getpid())
+                #     rss = proc.memory_info().rss / 1024 ** 2  # in MB
+                #     print(f"RAM usage: {rss:.2f} MB")
+
+                if i%1000 == 0:
+                    torch.save(self.policy_DQN.state_dict(), f"{self.folder_name}/fetcher_dqn{i}.pt")
+                    with open(f"{self.folder_name}/rewards_{i}.csv", "w", newline='') as f:
+                        writer = csv.writer(f)
+                        writer.writerow(["episode", "reward"])  # optional header
+                        for i, reward in enumerate(reward_per_episode):
+                            writer.writerow([i, reward])
                 
 
-                self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
-                self.epsilon_history.append(self.epsilon)
+            self.env.close()
 
-                if step_count > self.target_update_freq :
-                    self.target_DQN.load_state_dict(self.policy_DQN.state_dict())
-                    step_count=0
-
-            # if i%5 == 0:
-            #     proc = psutil.Process(os.getpid())
-            #     rss = proc.memory_info().rss / 1024 ** 2  # in MB
-            #     print(f"RAM usage: {rss:.2f} MB")
-
-            if i%1000 == 0:
-                torch.save(self.policy_DQN.state_dict(), f"{self.folder_name}/fetcher_dqn{i}.pt")
-                with open(f"{self.folder_name}/rewards_{i}.csv", "w", newline='') as f:
-                    writer = csv.writer(f)
-                    writer.writerow(["episode", "reward"])  # optional header
-                    for i, reward in enumerate(reward_per_episode):
-                        writer.writerow([i, reward])
-            
-
-        self.env.close()
-
-        with open(f"{self.folder_name}/rewards.csv", "w", newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(["episode", "reward"])  # optional header
-            for i, reward in enumerate(reward_per_episode):
-                writer.writerow([i, reward])
+            with open(f"{self.folder_name}/rewards.csv", "w", newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(["episode", "reward"])  # optional header
+                for i, reward in enumerate(reward_per_episode):
+                    writer.writerow([i, reward])
+        
+        results = pstats.Stats(profile)
+        results.sort_stats(pstats.SortKey.TIME)
+        results.print_stats()
+        results.dump_stats("05_Before_optimization_1000episodes_comment_cache_distances.prof")
 
     def strip_ansi(self,text):
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
@@ -354,16 +359,23 @@ class DQNTrainer:
             else: 
                 with torch.no_grad():
                     
-                    dqn_input, is_empty = self.state_to_dqn_input(new_state, num_states)
+                    if self.arglist.dqn_input == "Full":
+                        dqn_input, is_empty = self.state_to_dqn_input(self.env.rep)
+                    elif self.arglist.dqn_input == "Summary":
+                        dqn_input = self.get_agent_specific_state(state)
+                        is_empty = False
                     target = torch.FloatTensor(
                         reward + self.discount_factor * target_DQN(dqn_input).max()
                     )
 
-            dqn_input, is_empty = self.state_to_dqn_input(state, num_states)
+            if self.arglist.dqn_input == "Full":
+                dqn_input, is_empty = self.state_to_dqn_input(self.env.rep)
+            elif self.arglist.dqn_input == "Summary":
+                dqn_input = self.get_agent_specific_state(state)
+                is_empty = False
             current_q = policy_DQN(dqn_input)
             current_q_list.append(current_q)
 
-            dqn_input, is_empty = self.state_to_dqn_input(state, num_states)
             target_q = target_DQN(dqn_input)
             target_q[action] = target
             target_q_list.append(target_q)
