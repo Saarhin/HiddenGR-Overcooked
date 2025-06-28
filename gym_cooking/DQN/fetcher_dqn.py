@@ -18,6 +18,11 @@ import csv
 import time
 import cProfile
 import pstats
+from collections import namedtuple
+
+Transition = namedtuple(
+    "Transition", ["state", "action", "next_state", "reward", "terminated"]
+)
 
 class DQN(nn.Module):
     def __init__(self, in_states, h1_nodes, out_actions):
@@ -223,7 +228,7 @@ class DQNTrainer:
         results = pstats.Stats(profile)
         results.sort_stats(pstats.SortKey.TIME)
         results.print_stats()
-        results.dump_stats("05_Before_optimization_1000episodes_comment_cache_distances.prof")
+        results.dump_stats("08_commented_copy.prof")
 
     def strip_ansi(self,text):
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
@@ -347,42 +352,89 @@ class DQNTrainer:
         return env_state.get_repr()
     
     def optimize(self, mini_batch, policy_DQN, target_DQN):
-        num_states = policy_DQN.fc1.in_features
+        # num_states = policy_DQN.fc1.in_features
 
-        current_q_list = []
-        target_q_list = []
+        # current_q_list = []
+        # target_q_list = []
 
-        for state, action, new_state, reward, terminated in mini_batch:
+        # for state, action, new_state, reward, terminated in mini_batch:
 
-            if terminated:
-                target = torch.FloatTensor([reward])
-            else: 
-                with torch.no_grad():
+        #     if terminated:
+        #         target = torch.FloatTensor([reward])
+        #     else: 
+        #         with torch.no_grad():
                     
-                    if self.arglist.dqn_input == "Full":
-                        dqn_input, is_empty = self.state_to_dqn_input(self.env.rep)
-                    elif self.arglist.dqn_input == "Summary":
-                        dqn_input = self.get_agent_specific_state(state)
-                        is_empty = False
-                    target = torch.FloatTensor(
-                        reward + self.discount_factor * target_DQN(dqn_input).max()
-                    )
+        #             if self.arglist.dqn_input == "Full":
+        #                 dqn_input, is_empty = self.state_to_dqn_input(self.env.rep)
+        #             elif self.arglist.dqn_input == "Summary":
+        #                 dqn_input = self.get_agent_specific_state(state)
+        #                 is_empty = False
+        #             target = torch.FloatTensor(
+        #                 reward + self.discount_factor * target_DQN(dqn_input).max()
+        #             )
 
-            if self.arglist.dqn_input == "Full":
-                dqn_input, is_empty = self.state_to_dqn_input(self.env.rep)
-            elif self.arglist.dqn_input == "Summary":
-                dqn_input = self.get_agent_specific_state(state)
-                is_empty = False
-            current_q = policy_DQN(dqn_input)
-            current_q_list.append(current_q)
+        #     if self.arglist.dqn_input == "Full":
+        #         dqn_input, is_empty = self.state_to_dqn_input(self.env.rep)
+        #     elif self.arglist.dqn_input == "Summary":
+        #         dqn_input = self.get_agent_specific_state(state)
+        #         is_empty = False
+        #     current_q = policy_DQN(dqn_input)
+        #     current_q_list.append(current_q)
 
-            target_q = target_DQN(dqn_input)
-            target_q[action] = target
-            target_q_list.append(target_q)
+        #     target_q = target_DQN(dqn_input)
+        #     target_q[action] = target
+        #     target_q_list.append(target_q)
 
-        loss = self.loss_fn(torch.stack(current_q_list), torch.stack(target_q_list))
+        # loss = self.loss_fn(torch.stack(current_q_list), torch.stack(target_q_list))
 
-        self.optimizer.zero_grad()
+        # self.optimizer.zero_grad()
+        # loss.backward()
+        # self.optimizer.step()
+
+        # vectorized
+        batch = Transition(*zip(*mini_batch))
+
+        if self.arglist.dqn_input == "Full":
+            state_batch = torch.stack(
+                [self.state_to_dqn_input(self.env.rep)[0]  # returns (x, is_empty)
+                for _ in batch.state])
+        else:  # "Summary"
+            state_batch = torch.stack(
+                [self.get_agent_specific_state(s) for s in batch.state])
+            
+        non_final_mask = torch.tensor(
+        tuple(map(lambda d: not d, batch.terminated)),
+        dtype=torch.bool)
+
+        if self.arglist.dqn_input == "Full":
+            next_state_batch = torch.stack(
+                [self.state_to_dqn_input(self.env.rep)[0]
+                for _ in batch.next_state])              
+            
+        else:
+            next_state_batch = torch.stack(
+                [self.get_agent_specific_state(s) for s in batch.next_state])
+            
+        action_batch  = torch.tensor(batch.action,  dtype=torch.long).unsqueeze(1)  # (B,1)
+        reward_batch  = torch.tensor(batch.reward,  dtype=torch.float32)
+
+        with torch.no_grad():
+            # max_a Q_target(s',a)  for non-terminal samples
+            next_q_values = torch.zeros(len(mini_batch))
+            if non_final_mask.any():
+                q_next_all = target_DQN(next_state_batch[non_final_mask])   # (N_non_final, A)
+                next_q_values[non_final_mask] = q_next_all.max(dim=1).values
+
+        q_targets = reward_batch + self.discount_factor * next_q_values     # (B,)
+
+        # Current Q(s,a) for the actions actually taken
+        q_policy_all = policy_DQN(state_batch)                              # (B, A)
+        q_policy_sa  = q_policy_all.gather(1, action_batch).squeeze(1)      # (B,)
+
+        # -------- 3. Loss & back-prop ----------
+        loss = self.loss_fn(q_policy_sa, q_targets)                         # element-wise MSE
+
+        self.optimizer.zero_grad(set_to_none=True)
         loss.backward()
         self.optimizer.step()
 
