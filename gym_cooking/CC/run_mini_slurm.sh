@@ -12,6 +12,7 @@
 #SBATCH --account=def-mtaylor3
 
 module load python/3.10
+module load scipy-stack
 
 # Create and activate a clean virtual environment
 virtualenv --no-download $SLURM_TMPDIR/venv
