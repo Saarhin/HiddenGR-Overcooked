@@ -15,7 +15,7 @@ module load python/3.10
 module load scipy-stack
 
 # Create and activate a clean virtual environment
-virtualenv --no-download $SLURM_TMPDIR/venv
+virtualenv --no-download --system-site-packages $SLURM_TMPDIR/venv
 source $SLURM_TMPDIR/venv/bin/activate
 
 # Install only required packages
