@@ -1,0 +1,7 @@
+termcolor
+tqdm
+gym==0.17.2
+torch
+pygame
+opencv-python-headless
+pddlgym
