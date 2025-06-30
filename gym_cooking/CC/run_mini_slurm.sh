@@ -29,12 +29,10 @@ pip install --no-index \
     tqdm \
     dill \
     "gym==0.17.2" \
-    "numpy<1.24"  # pddlgym needs older numpy
+    "numpy<1.23"  # pddlgym needs older numpy
 
 # Then install pddlgym with explicit dependencies
-pip install --no-index \
-    --no-deps \  # Ignore pddlgym's dependency list
-    pddlgym
+pip install --no-index --no-deps pddlgym
 
 # Copy only what's needed
 rsync -avh /home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/ $SLURM_TMPDIR/gym_cooking/
