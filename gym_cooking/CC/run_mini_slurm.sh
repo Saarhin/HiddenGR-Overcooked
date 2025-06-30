@@ -21,7 +21,20 @@ source $SLURM_TMPDIR/venv/bin/activate
 # Install only required packages
 pip install --no-index --upgrade pip
 pip install --no-index -r /home/saarhin/scratch/HiddenGR-Overcooked/requirements_cc.txt
-pip install --no-index termcolor tqdm dill pddlgym
+pip install --no-index wheel  # Required for some packages
+
+# Base packages
+pip install --no-index \
+    termcolor \
+    tqdm \
+    dill \
+    "gym==0.17.2" \
+    "numpy<1.24"  # pddlgym needs older numpy
+
+# Then install pddlgym with explicit dependencies
+pip install --no-index \
+    --no-deps \  # Ignore pddlgym's dependency list
+    pddlgym
 
 # Copy only what's needed
 rsync -avh /home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/ $SLURM_TMPDIR/gym_cooking/
