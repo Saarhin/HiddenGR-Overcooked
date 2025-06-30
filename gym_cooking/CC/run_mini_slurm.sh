@@ -2,39 +2,33 @@
 #SBATCH --job-name=parallel_jobs       # Job name
 #SBATCH --error=/home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/error_log/error_%A_%a.log       # Error log file  for each task
 #SBATCH --output=/home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/out_log/output_%A_%a.out 
-#SBATCH --time=2:00:00
+#SBATCH --time=1:00:00
 #SBATCH --cpus-per-task=1             # Number of CPUs per task
-#SBATCH --ntasks=8
+#SBATCH --ntasks=4
 #SBATCH --mem-per-cpu=4G
 #SBATCH --array=0-1                  # Array index range (adjust based on parameter file size)
 #SBATCH --mail-user=samini1@ualberta.ca
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --account=def-mtaylor3
 
-SRC=/home/saarhin/scratch/HiddenGR-Overcooked
-
-DEST=$SLURM_TMPDIR/
-
-rsync -avh "$SRC/" "$DEST/"
-
-cd $SLURM_TMPDIR/HiddenGR-Overcooked
-
-
 module load python/3.10
 
-source $SLURM_TMPDIR/HiddenGR-Overcooked/marl/bin/activate
+# Create and activate a clean virtual environment
+virtualenv --no-download $SLURM_TMPDIR/venv
+source $SLURM_TMPDIR/venv/bin/activate
 
-export PYTHONPATH="${PYTHONPATH}:$SLURM_TMPDIR/HiddenGR-Overcooked"
+# Install only required packages
+pip install --no-index --upgrade pip
+pip install --no-index -r /home/saarhin/scratch/HiddenGR-Overcooked/requirements.txt
 
-cd gym_cooking
+# Copy only what's needed
+rsync -avh /home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/ $SLURM_TMPDIR/gym_cooking/
 
-PARAMS=$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" ./CC/parameters_mini.txt)
+cd $SLURM_TMPDIR/gym_cooking
 
-python main.py $PARAMS
+# Run the script (adjust parameters as needed)
+python main.py YOUR_PARAMETERS_HERE
 
-SRC_BASE=$SLURM_TMPDIR/HiddenGR-Overcooked/gym_cooking
-
-DEST=/home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/results
-
-rsync -avh "${SRC_BASE}"/policies_*  "$DEST"/
+# Copy back only results
+rsync -avh $SLURM_TMPDIR/gym_cooking/policies_* /home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/results/
 
