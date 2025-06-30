@@ -20,6 +20,7 @@ source $SLURM_TMPDIR/venv/bin/activate
 
 # Install only required packages
 pip install --no-index --upgrade pip
+pip install --no-index -r /home/saarhin/scratch/HiddenGR-Overcooked/requirements_cc.txt
 pip install --no-index termcolor tqdm dill pddlgym
 
 # Copy only what's needed
