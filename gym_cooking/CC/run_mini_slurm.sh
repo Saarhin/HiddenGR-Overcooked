@@ -11,7 +11,7 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --account=def-mtaylor3
 
-module load python/3.9
+module load python/3.9.6
 module load scipy-stack
 
 # Create and activate a clean virtual environment
@@ -32,7 +32,7 @@ pip install --no-index \
     "numpy"  # pddlgym needs older numpy
 
 # Then install pddlgym with explicit dependencies
-pip install --no-index --no-deps pddlgym
+pip install --no-index $HOME/src/pddlgym
 
 # Copy only what's needed
 rsync -avh /home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/ $SLURM_TMPDIR/gym_cooking/
