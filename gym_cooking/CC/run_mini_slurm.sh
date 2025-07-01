@@ -11,7 +11,7 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --account=def-mtaylor3
 
-module load python/3.10
+module load python/3.9
 module load scipy-stack
 
 # Create and activate a clean virtual environment
@@ -29,7 +29,7 @@ pip install --no-index \
     tqdm \
     dill \
     "gym==0.17.2" \
-    "numpy==1.23"  # pddlgym needs older numpy
+    "numpy"  # pddlgym needs older numpy
 
 # Then install pddlgym with explicit dependencies
 pip install --no-index --no-deps pddlgym
