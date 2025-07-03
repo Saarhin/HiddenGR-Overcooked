@@ -15,24 +15,25 @@ module load python/3.9.6
 module load scipy-stack
 
 # Create and activate a clean virtual environment
-virtualenv --no-download --system-site-packages $SLURM_TMPDIR/venv
-source $SLURM_TMPDIR/venv/bin/activate
+# virtualenv --no-download --system-site-packages $SLURM_TMPDIR/venv
+# source $SLURM_TMPDIR/venv/bin/activate
+source /home/saarhin/scratch/HiddenGR-Overcooked/marl
 
 # Install only required packages
-pip install --no-index --upgrade pip
-pip install --no-index -r /home/saarhin/scratch/HiddenGR-Overcooked/requirements_cc.txt
-pip install --no-index wheel  # Required for some packages
+# pip install --no-index --upgrade pip
+# pip install --no-index -r /home/saarhin/scratch/HiddenGR-Overcooked/requirements_cc.txt
+# pip install --no-index wheel  # Required for some packages
 
 # Base packages
-pip install --no-index \
-    termcolor \
-    tqdm \
-    dill \
-    "gym==0.17.2" \
-    "numpy"  # pddlgym needs older numpy
+# pip install --no-index \
+#     termcolor \
+#     tqdm \
+#     dill \
+#     "gym==0.17.2" \
+#     "numpy"  # pddlgym needs older numpy
 
 # Then install pddlgym with explicit dependencies
-pip install --no-index $HOME/src/pddlgym
+# pip install --no-index $HOME/src/pddlgym
 
 # Copy only what's needed
 rsync -avh /home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/ $SLURM_TMPDIR/gym_cooking/
