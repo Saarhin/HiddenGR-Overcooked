@@ -17,7 +17,7 @@ module load scipy-stack
 # Create and activate a clean virtual environment
 # virtualenv --no-download --system-site-packages $SLURM_TMPDIR/venv
 # source $SLURM_TMPDIR/venv/bin/activate
-source /home/saarhin/projects/def-mtaylor3/saarhin/HiddenGR-Overcooked/marl
+source /home/saarhin/projects/def-mtaylor3/saarhin/HiddenGR-Overcooked/marl/bin/activate
 
 # Install only required packages
 # pip install --no-index --upgrade pip
