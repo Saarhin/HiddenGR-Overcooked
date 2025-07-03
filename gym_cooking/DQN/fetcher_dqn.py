@@ -18,8 +18,8 @@ import csv
 import time
 import cProfile
 import pstats
-from collections import namedtuple
-from scalene import scalene_profiler
+# from collections import namedtuple
+# from scalene import scalene_profiler
 Transition = namedtuple(
     "Transition", ["state", "action", "next_state", "reward", "terminated"]
 )
@@ -134,7 +134,7 @@ class DQNTrainer:
 
     def train(self):
             
-            scalene_profiler.start()
+            # scalene_profiler.start()
         # with cProfile.Profile() as profile:
 
             # might need to hardcode these
@@ -231,7 +231,7 @@ class DQNTrainer:
         # results.print_stats()
         # results.dump_stats("08_commented_copy.prof")
 
-            scalene_profiler.stop()
+            # scalene_profiler.stop()
 
     def strip_ansi(self,text):
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
