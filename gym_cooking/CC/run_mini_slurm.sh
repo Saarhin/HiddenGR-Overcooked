@@ -11,7 +11,7 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --account=def-mtaylor3
 
-module load python/3.9.6
+module load python/3.10
 module load scipy-stack
 
 # Create and activate a clean virtual environment
