@@ -5,7 +5,7 @@
 #SBATCH --time=20:00:00
 #SBATCH --cpus-per-task=1             # Number of CPUs per task
 #SBATCH --ntasks=2
-#SBATCH --mem-per-cpu=16G
+#SBATCH --mem-per-cpu=8G
 #SBATCH --array=0-19                  # Array index range (adjust based on parameter file size)
 #SBATCH --mail-user=samini1@ualberta.ca
 #SBATCH --mail-type=BEGIN,END,FAIL
