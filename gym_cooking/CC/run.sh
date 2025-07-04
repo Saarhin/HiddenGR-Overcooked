@@ -4,20 +4,28 @@
 #SBATCH --output=/home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/out_log/output_%A_%a.out 
 #SBATCH --time=20:00:00
 #SBATCH --cpus-per-task=1             # Number of CPUs per task
-#SBATCH --mem=128G                     # Memory per task
-#SBATCH --array=0-9                  # Array index range (adjust based on parameter file size)
+#SBATCH --ntasks=2
+#SBATCH --mem-per-cpu=16G
+#SBATCH --array=0-19                  # Array index range (adjust based on parameter file size)
 #SBATCH --mail-user=samini1@ualberta.ca
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --account=def-mtaylor3
 
 module load python/3.10
+module load scipy-stack
 
-source /home/saarhin/scratch/HiddenGR-Overcooked/marl/bin/activate
+source ~/envs/marl/bin/activate
 
-export PYTHONPATH="${PYTHONPATH}:/home/scratch/saarhin/HiddenGR-Overcooked"
+# Copy only what's needed
+cp -r /home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/ $SLURM_TMPDIR/gym_cooking/
 
-cd gym_cooking
 
+cd $SLURM_TMPDIR/gym_cooking
+
+# Run the script (adjust parameters as needed)
 PARAMS=$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" ./CC/parameters.txt)
-
 python main.py $PARAMS
+
+# Copy back only results
+scp -rp  $SLURM_TMPDIR/gym_cooking/policies_*  /home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/results/
+
