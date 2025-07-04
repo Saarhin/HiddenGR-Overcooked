@@ -78,7 +78,14 @@ def parse_arguments():
     parser.add_argument("--belief-experiments", action="store_true", default=False, help="Run belief agent")
     parser.add_argument("--dqn-input", type=str, default="Summary",
                         help="What type of input does the fetcher get? Full, Summary, Summary+belief(distance), Summary+belief(GVFs)")
+    parser.add_argument("--folder-name", type=str, default="fetcherDQN_simpleChef",
+                        help="name of the saving folder")
     parser.add_argument("--chef-test", action="store_true", default=False, help="Thest the chef performance in fron of a human player")
+    parser.add_argument("--single-agent", action="store_true", default=False, help="Even though there are 2 players the chef should stay still")
+    parser.add_argument("--num-eps", type=int, default=100000,
+                        help="Number of episodes")
+    parser.add_argument("--save-interval", type=int, default=1000,
+                        help="Saves model and reward every n episodes")
 
 
     return parser.parse_args()

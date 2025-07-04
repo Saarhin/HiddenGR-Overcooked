@@ -80,7 +80,7 @@ class DQNTrainer:
         self.y = 0
         self.realAgents = None
         self.arglist = arglist
-        self.folder_name = f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}_fetcherDQN_simpleChef"
+        self.folder_name = f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}_{self.arglist.folder_name}"
 
         if not os.path.exists(self.folder_name):
             os.mkdir(self.folder_name)
@@ -130,7 +130,7 @@ class DQNTrainer:
                         real_agents.append(real_agent)
                         count +=1
 
-        return real_agents, x, y
+        return real_agents, x, y, recipes
 
     def train(self):
             
@@ -145,13 +145,16 @@ class DQNTrainer:
             step_count = 0
 
             for i in tqdm(range(self.episodes)):
-                self.realAgents, self.x, self.y=self.initialize_agents()
+                self.realAgents, self.x, self.y, recipes=self.initialize_agents()
                 
                 terminated = False
                 truncated = False
                 sum_reward = 0
 
-                target = "Water" if random.random()<0.5 else "Sushi"
+                if len(recipes) == 1:
+                    target = "Water"
+                elif len(recipes) == 2:
+                    target = "Water" if random.random()<0.5 else "Sushi"
                 for agent in self.realAgents:
                         if agent.name == 'agent-2':
                             agent.target_item = target
@@ -170,9 +173,12 @@ class DQNTrainer:
                                 is_empty = False
                             action, action_save = agent.select_action(obs=state,env=self.env, epsilon=self.epsilon, policy=self.policy_DQN, dqn_input=dqn_input, is_empty=is_empty)
                         else:
-                            action = agent.select_action(obs=state)
-                            if action is None:
+                            if self.arglist.single_agent:
                                 action = (0, 0)
+                            else:
+                                action = agent.select_action(obs=state)
+                                if action is None:
+                                    action = (0, 0)
                         action_dict[agent.name] = action
                         
 
@@ -209,7 +215,7 @@ class DQNTrainer:
                 #     rss = proc.memory_info().rss / 1024 ** 2  # in MB
                 #     print(f"RAM usage: {rss:.2f} MB")
 
-                if i%1000 == 0:
+                if i%self.arglist.save_interval == 0:
                     torch.save(self.policy_DQN.state_dict(), f"{self.folder_name}/fetcher_dqn{i}.pt")
                     with open(f"{self.folder_name}/rewards_{i}.csv", "w", newline='') as f:
                         writer = csv.writer(f)
