@@ -136,3 +136,4 @@ venv.bak/
 # files
 *.csv
 *.prof
+test.txt

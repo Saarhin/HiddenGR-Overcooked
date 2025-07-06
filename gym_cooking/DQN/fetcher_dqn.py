@@ -72,7 +72,8 @@ class DQNTrainer:
         self.discount_factor = 0.99
         self.epsilon = 1.0
         self.epsilon_decay = 0.995
-        self.min_epsilon = 0.2
+        self.min_epsilon = 0.5
+        self._linear_decay = (self.epsilon - self.min_epsilon) / self.episodes
         self.target_update_freq = 100
         self.step_counter = 0
         self.epsilon_history = []
@@ -184,6 +185,8 @@ class DQNTrainer:
 
                     new_state, reward, terminated, _ = self.env.step((action_dict, target))
 
+                    print(f"step reward = {reward}")
+
                     sum_reward += reward
 
                     self.memory.append((state, action_save, new_state, reward, terminated))
@@ -197,13 +200,15 @@ class DQNTrainer:
                     step_count += 1
 
                 reward_per_episode[i] = sum_reward
+                print(f"episode reward = {sum_reward}")
                 
                 if len(self.memory)>self.batch_size:
                     mini_batch = self.memory.sample(self.batch_size)
                     self.optimize(mini_batch, self.policy_DQN, self.target_DQN)
                     
 
-                    self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
+                    # self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
+                    self.epsilon = max(self.min_epsilon, self.epsilon - self._linear_decay)
                     self.epsilon_history.append(self.epsilon)
 
                     if step_count > self.target_update_freq :
@@ -354,6 +359,50 @@ class DQNTrainer:
                 # length of this state is 12
                
                 return torch.FloatTensor(dqn_state)
+            
+            elif self.arglist.single_agent:
+                # location of the fetcher
+                dqn_state.append(target_agent.location[0])
+                dqn_state.append(target_agent.location[1])
+
+                # water location
+                water_found = False
+                for obj_name, obj in env_state.world.objects.items():
+                    if obj_name == "Plate-Water":
+                        dqn_state.append(obj[0].location[0])
+                        dqn_state.append(obj[0].location[1])
+                        water_found = True
+                        break
+
+                if not water_found: 
+                    dqn_state.append(-1)
+                    dqn_state.append(-1)
+
+                # Delivery location
+                delivery_found = False
+                for obj_name, obj in env_state.world.objects.items():
+                    if obj_name == "Delivery":
+                        dqn_state.append(obj[0].location[0])
+                        dqn_state.append(obj[0].location[1])
+                        delivery_found = True
+                        break
+
+                if not delivery_found: 
+                    dqn_state.append(-1)
+                    dqn_state.append(-1)
+
+                
+                if "water" in target_agent.get_holding().lower():
+                    dqn_state.append(1)
+                elif "sushi" in target_agent.get_holding().lower():
+                    dqn_state.append(2)
+                else:
+                    dqn_state.append(0)
+
+                # length of this state is 7
+               
+                return torch.FloatTensor(dqn_state)
+
         except Exception as e:
             print(f"Error creating agent-specific state: {e}")
             

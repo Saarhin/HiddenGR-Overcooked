@@ -12,6 +12,8 @@ class OvercookedFetcherDQN:
             state_dim = (9*9*6)
         elif arglist.dqn_input == "Summary":
             state_dim = 12
+            if arglist.single_agent:
+                state_dim = 7
 
 
         policy = DQNTrainer(

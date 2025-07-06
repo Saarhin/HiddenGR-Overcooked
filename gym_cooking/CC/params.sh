@@ -5,7 +5,7 @@ dqn_input=("Summary")
 
 seeds=(1 2 3 4 5 6 7 8 9 10)
 
-single=("--single-agent" "")
+single=("--single-agent")
 
 eps=(500000)
 
@@ -22,9 +22,9 @@ for item in "${dqn_input[@]}"; do
                 for i in "${intervals[@]}"; do
 
                     if [[ $s == "--single-agent" ]]; then
-                        echo "--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed $seed --dqn-input $item $s  --num-eps $ep --save-interval $i --folder-name singlefetcher5x5" >> "$output_file"
+                        echo "--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed $seed --dqn-input $item $s  --num-eps $ep --save-interval $i --folder-name singlefetcher5x5_1" >> "$output_file"
                     else
-                        echo "--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed $seed --dqn-input $item $s  --num-eps $ep --save-interval $i --folder-name fetcherDQN_simpleChef5x5" >> "$output_file"
+                        echo "--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed $seed --dqn-input $item $s  --num-eps $ep --save-interval $i --folder-name fetcherDQN_simpleChef5x5" >> "$output_file"
                     fi
                 done
             done

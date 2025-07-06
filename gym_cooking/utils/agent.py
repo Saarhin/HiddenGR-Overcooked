@@ -25,7 +25,7 @@ import torch
 from gym import spaces
 import re
 
-AgentRepr = namedtuple("AgentRepr", "name location holding previous_holing")
+AgentRepr = namedtuple("AgentRepr", "name location holding previous_holding")
 
 # Colors for agents.
 COLORS = ['blue', 'magenta', 'yellow', 'green']
@@ -51,6 +51,7 @@ class RealAgent:
         self.is_subtask_complete = lambda w: False
         self.beta = arglist.beta
         self.none_action_prob = 0.5
+        self.previous_holding = None
 
         self.model_type = agent_settings(arglist, name)
         if self.model_type == "up":
@@ -93,6 +94,7 @@ class RealAgent:
         self.location = sim_agent.location
         self.holding = sim_agent.holding
         self.action = sim_agent.action
+        self.previous_holding = sim_agent.previous_holding
 
         if obs.t == 0:
             self.setup_subtasks(env=obs)
@@ -389,6 +391,7 @@ class HybridAgent:
         self.target_item = None
         self.real_agent = None
         self.fetching_agent_prev_location = None
+        self.previous_holding = None
         
         # Metrics tracking attributes
         self.subtask = None
@@ -445,6 +448,7 @@ class HybridAgent:
         self.location = sim_agent.location
         self.holding = sim_agent.holding
         self.action = sim_agent.action
+        self.previous_holding = sim_agent.previous_holding
 
         # print(previous_holding)
         # print(self.holding)
@@ -941,8 +945,6 @@ class SimpleAgent:
         self.action = sim_agent.action
         self.previous_holding = sim_agent.previous_holding
 
-        print(self.holding)
-        print(self.previous_holding)
 
         # Find the other agent (assume it's the fetching agent)
         fetching_agent = next((a for a in obs.sim_agents if a.name != self.name), None)        
