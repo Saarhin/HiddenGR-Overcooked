@@ -82,7 +82,7 @@ class DQNTrainer:
         self.y = 0
         self.realAgents = None
         self.arglist = arglist
-        self.folder_name = f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}_{self.arglist.folder_name}"
+        self.folder_name = f"policies_{self.arglist.dqn_input}_seed{self.arglist.seed}_{self.arglist.folder_name}_{self.arglist.level}"
 
         if not os.path.exists(self.folder_name):
             os.mkdir(self.folder_name)

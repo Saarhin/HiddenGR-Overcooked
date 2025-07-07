@@ -2,11 +2,11 @@
 #SBATCH --job-name=parallel_jobs       # Job name
 #SBATCH --error=/home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/error_log/error_%A_%a.log       # Error log file  for each task
 #SBATCH --output=/home/saarhin/scratch/HiddenGR-Overcooked/gym_cooking/out_log/output_%A_%a.out 
-#SBATCH --time=20:00:00
+#SBATCH --time=24:00:00
 #SBATCH --cpus-per-task=1             # Number of CPUs per task
 #SBATCH --ntasks=2
 #SBATCH --mem-per-cpu=8G
-#SBATCH --array=0-9                  # Array index range (adjust based on parameter file size)
+#SBATCH --array=0-39                  # Array index range (adjust based on parameter file size)
 #SBATCH --mail-user=samini1@ualberta.ca
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --account=def-mtaylor3

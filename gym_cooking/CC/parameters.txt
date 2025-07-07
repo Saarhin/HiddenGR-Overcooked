@@ -1,10 +1,40 @@
---num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 1 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher5x5_1
---num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 2 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher5x5_1
---num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 3 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher5x5_1
---num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 4 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher5x5_1
---num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 5 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher5x5_1
---num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 6 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher5x5_1
---num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 7 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher5x5_1
---num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 8 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher5x5_1
---num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 9 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher5x5_1
---num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 10 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher5x5_1
+--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 1 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 1 --level SarahDesignOne --belief-experiments --seed 1 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 1 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 2 --level SarahDesignOne --belief-experiments --seed 1 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 2 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 1 --level SarahDesignOne --belief-experiments --seed 2 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 2 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 2 --level SarahDesignOne --belief-experiments --seed 2 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 3 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 1 --level SarahDesignOne --belief-experiments --seed 3 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 3 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 2 --level SarahDesignOne --belief-experiments --seed 3 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 4 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 1 --level SarahDesignOne --belief-experiments --seed 4 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 4 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 2 --level SarahDesignOne --belief-experiments --seed 4 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 5 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 1 --level SarahDesignOne --belief-experiments --seed 5 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 5 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 2 --level SarahDesignOne --belief-experiments --seed 5 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 6 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 1 --level SarahDesignOne --belief-experiments --seed 6 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 6 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 2 --level SarahDesignOne --belief-experiments --seed 6 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 7 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 1 --level SarahDesignOne --belief-experiments --seed 7 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 7 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 2 --level SarahDesignOne --belief-experiments --seed 7 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 8 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 1 --level SarahDesignOne --belief-experiments --seed 8 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 8 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 2 --level SarahDesignOne --belief-experiments --seed 8 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 9 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 1 --level SarahDesignOne --belief-experiments --seed 9 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 9 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 2 --level SarahDesignOne --belief-experiments --seed 9 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 1 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 10 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 1 --level SarahDesignOne --belief-experiments --seed 10 --dqn-input Summary --single-agent  --num-eps 500000 --save-interval 10000 --folder-name singlefetcher
+--num-agents 2 --level SarahDesignSingleAgent5x5 --belief-experiments --seed 10 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
+--num-agents 2 --level SarahDesignOne --belief-experiments --seed 10 --dqn-input Summary   --num-eps 500000 --save-interval 10000 --folder-name fetcherDQN_simpleChef
