@@ -6,13 +6,13 @@ import pandas as pd
 # ------------------------------------------------------------
 # Configuration ― change these to match your real setup
 # ------------------------------------------------------------
-DATA_DIR = Path("/Users/sarahamini/Desktop/Sarah/Github/Hidden_results/results/")          # Folder that contains your *.npy files
-FILE_PATTERN = "policies_Summary_seed{}_fetcherDQN_simpleChef5x5/rewards.csv"  # e.g. seed0_returns.npy … seed9_returns.npy
+DATA_DIR = Path("/Users/sarahamini/Desktop/Sarah/Github/HiddenGR-Overcooked/gym_cooking/")          # Folder that contains your *.npy files
+FILE_PATTERN = "policies_Summary_seed{}_singlefetcher5x5_1/rewards.csv"  # e.g. seed0_returns.npy … seed9_returns.npy
 NUM_SEEDS = 10
 MOVING_AVG_WINDOW = 1000           # e.g. 1 000‑episode moving average
 BOOTSTRAP_REPS = 1000              # Increase for tighter CI (⇧ runtime)
 ALPHA = 0.05                       # For a (1‑α)=95 % CI
-SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+SEEDS = [11]
 # ------------------------------------------------------------
 
 def moving_average(x: np.ndarray, w: int) -> np.ndarray:
@@ -44,6 +44,9 @@ for i in SEEDS:
 
 # Sanity‑check all seeds have the same number of episodes
 lengths = {len(r) for r in returns_list}
+
+# plt.plot(returns_list[0])
+# plt.show()
 if len(lengths) != 1:
     raise ValueError(f"All seeds must have the same #episodes. Got lengths: {lengths}")
 EPISODES = lengths.pop()

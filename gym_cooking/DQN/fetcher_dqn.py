@@ -18,6 +18,7 @@ import csv
 import time
 import cProfile
 import pstats
+import copy
 # from collections import namedtuple
 # from scalene import scalene_profiler
 Transition = namedtuple(
@@ -189,7 +190,9 @@ class DQNTrainer:
 
                     sum_reward += reward
 
-                    self.memory.append((state, action_save, new_state, reward, terminated))
+
+                    self.memory.append((dqn_input, action_save, self.get_agent_specific_state(new_state), reward, terminated))
+
                     for agent in self.realAgents:
                         # Only RealAgent needs to refresh subtasks
                         if not isinstance(agent, DQNFetchingAgent):
@@ -452,27 +455,19 @@ class DQNTrainer:
         # vectorized
         batch = Transition(*zip(*mini_batch))
 
-        if self.arglist.dqn_input == "Full":
-            state_batch = torch.stack(
-                [self.state_to_dqn_input(self.env.rep)[0]  # returns (x, is_empty)
-                for _ in batch.state])
-        else:  # "Summary"
-            state_batch = torch.stack(
-                [self.get_agent_specific_state(s) for s in batch.state])
-            
+        
+        state_batch = torch.stack(
+            [s for s in batch.state])
+        
+          
         non_final_mask = torch.tensor(
         tuple(map(lambda d: not d, batch.terminated)),
         dtype=torch.bool)
 
-        if self.arglist.dqn_input == "Full":
-            next_state_batch = torch.stack(
-                [self.state_to_dqn_input(self.env.rep)[0]
-                for _ in batch.next_state])              
-            
-        else:
-            next_state_batch = torch.stack(
-                [self.get_agent_specific_state(s) for s in batch.next_state])
-            
+        
+        next_state_batch = torch.stack(
+            [s for s in batch.next_state])
+        
         action_batch  = torch.tensor(batch.action,  dtype=torch.long).unsqueeze(1)  # (B,1)
         reward_batch  = torch.tensor(batch.reward,  dtype=torch.float32)
 
